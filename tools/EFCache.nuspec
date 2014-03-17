@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>EFCache</id>
+    <version>1.0.0-alpha</version>
+    <authors>Pawel "moozzyk" Kadluczka</authors>
+    <title>Second Level Cache for Entity Framework 6.1.</title>
+    <licenseUrl>https://efcache.codeplex.com/license</licenseUrl>
+    <projectUrl>https://efcache.codeplex.com</projectUrl>
+    <!--
+    <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?....</iconUrl>
+    -->
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Second Level Cache for Entity Framework 6.1.</description>
+    <summary>Second Level Cache for Entity Framework 6.1.</summary>
+    <language>en-US</language>
+    <tags>EF6 EF6.1 EF Entity Framework 6.1 Second Level Cache moozzyk blog.3d-logic.com</tags>
+    
+    <dependencies>
+      <dependency id="EntityFramework" version="[6.1.0,7.0)" />
+    </dependencies>
+    
+  </metadata>
+</package>
