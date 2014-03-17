@@ -1,4 +1,8 @@
-﻿namespace EFCache
+﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+
+// Created based on the ICache.cs from Tracing and Caching Provider Wrappers for Entity Framework sample to make it easy to port exisiting applications
+
+namespace EFCache
 {
     using System;
     using System.Collections.Generic;

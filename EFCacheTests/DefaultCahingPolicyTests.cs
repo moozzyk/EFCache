@@ -1,12 +1,12 @@
-﻿
-
-using System;
-using System.Collections.Generic;
-using System.Data.Entity.Core.Metadata.Edm;
-using Xunit;
+﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
 namespace EFCache
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Data.Entity.Core.Metadata.Edm;
+    using Xunit;
+
     public class DefaultCahingPolicyTests
     {
         [Fact]

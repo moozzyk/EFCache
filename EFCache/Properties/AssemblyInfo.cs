@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -7,12 +9,9 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("EFCache")]
 [assembly: AssemblyDescription("2nd Level Cache for Entity Framework 6.1")]
-[assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Pawel Kadluczka")]
 [assembly: AssemblyProduct("EFCache")]
 [assembly: AssemblyCopyright("Copyright ©  2013")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
