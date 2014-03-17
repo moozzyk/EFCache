@@ -1,0 +1,14 @@
+﻿TODO: 
+
+Alpha:
+- license/file headers
+
+RTM:
+- missing overrides - DbCommand
+- check dispose on DbCommand
+- async (commands, reader)
+- TransactionScope handling
+
+Maybe:
+- multiple resultsets ?
+- statistics - InMemoryCache(?)

@@ -1,0 +1,4 @@
+- Async
+- Review NotImplentedExceptions
+- Review TODOs in the code
+- Custom functions with side effects
