@@ -72,12 +72,12 @@ namespace EFCache
             return _providerServices.GetSpatialDataReader(fromReader, manifestToken);
         }
 
-#pragma warning disable 618
+#pragma warning disable 618, 672
         protected override DbSpatialServices DbGetSpatialServices(string manifestToken)
         {
             return _providerServices.GetSpatialServices(manifestToken);
         }
-#pragma warning restore 618
+#pragma warning restore 618, 672
 
         public override object GetService(Type type, object key)
         {
