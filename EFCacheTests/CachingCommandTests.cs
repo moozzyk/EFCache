@@ -317,6 +317,10 @@ namespace EFCache
             Assert.Equal("int", reader.GetDataTypeName(0));
             Assert.Equal(typeof(int), reader.GetFieldType(0));
             Assert.Equal("Id", reader.GetName(0));
+            Assert.Equal("nvarchar", reader.GetDataTypeName(1));
+            Assert.Equal(typeof(string), reader.GetFieldType(1));
+            Assert.Equal("Name", reader.GetName(1));
+
         }
 
         [Fact]
@@ -386,7 +390,7 @@ namespace EFCache
                 h => h.PutItem(
                     transaction,
                     "Query_Param1=123_Param2=abc",
-                    It.Is<CachedResults>(r => r.Results.Count == 1 && r.RecordsAffected == 1 && r.TableMetadata.Length == 1),
+                    It.Is<CachedResults>(r => r.Results.Count == 1 && r.RecordsAffected == 1 && r.TableMetadata.Length == 2),
                     It.Is<IEnumerable<string>>(es => es.SequenceEqual(new [] { "ES1", "ES2"})),
                     slidingExpiration,
                     absoluteExpiration),
@@ -846,26 +850,36 @@ namespace EFCache
             var mockReader = new Mock<DbDataReader>();
             mockReader
                 .Setup(r => r.FieldCount)
-                .Returns(1);
+                .Returns(2);
             mockReader
                 .Setup(r => r.GetDataTypeName(0))
                 .Returns("int");
             mockReader
+                .Setup(r => r.GetDataTypeName(1))
+                .Returns("nvarchar");
+            mockReader
                 .Setup(r => r.GetFieldType(0))
                 .Returns(typeof(int));
+            mockReader
+                .Setup(r => r.GetFieldType(1))
+                .Returns(typeof(string));
             mockReader
                 .Setup(r => r.GetName(0))
                 .Returns("Id");
             mockReader
-                .Setup(r => r.FieldCount)
-                .Returns(1);
+                .Setup(r => r.GetName(1))
+                .Returns("Name");
             mockReader
                 .Setup(r => r.RecordsAffected)
                 .Returns(resultCount);
 
             mockReader
                 .Setup(r => r.GetValues(It.IsAny<object[]>()))
-                .Callback((object[] values) => values[0] = 1);
+                .Callback((object[] values) =>
+                {
+                    values[0] = 1;
+                    values[1] = "test";
+                });
 
             mockReader
                 .Setup(r => r.Read())

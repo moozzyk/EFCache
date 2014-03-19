@@ -223,7 +223,7 @@ namespace EFCache
             {
                 columnMetadata[i] = 
                     new ColumnMetadata(
-                        reader.GetName(0), reader.GetDataTypeName(0), reader.GetFieldType(0));
+                        reader.GetName(i), reader.GetDataTypeName(i), reader.GetFieldType(i));
             }
 
             return columnMetadata;
