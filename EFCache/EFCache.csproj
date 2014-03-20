@@ -80,7 +80,7 @@
   <Target Name="BuildSigned">
     <Error Text="KeyFile parameter not spercified (/p:KeyFile=MyKey.snk)" Condition=" '$(KeyFile)' == ''" />
     
-    <MSBuild Projects="InteractivePreGeneratedViews.csproj" Targets="Rebuild"
+    <MSBuild Projects="EFCache.csproj" Targets="Rebuild"
      Properties="InternalsVisibleToEnabled=false;SignAssembly=true;AssemblyOriginatorKeyFile=$(KeyFile)" BuildInParallel="$(BuildInParallel)" />     
   </Target>
 

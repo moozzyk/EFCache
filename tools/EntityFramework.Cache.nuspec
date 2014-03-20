@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <metadata>
-    <id>EFCache</id>
+    <id>EntityFramework.Cache</id>
     <version>1.0.0-alpha</version>
     <authors>Pawel "moozzyk" Kadluczka</authors>
     <title>Second Level Cache for Entity Framework 6.1.</title>
