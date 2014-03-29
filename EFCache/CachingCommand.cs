@@ -55,7 +55,7 @@ namespace EFCache
             get
             {
                 return _commandTreeFacts.IsQuery && 
-                    !_commandTreeFacts.UsesNonDeterministicFunctions && 
+                    !_commandTreeFacts.UsesNonDeterministicFunctions &&
                     _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets);
             }
         }
@@ -295,12 +295,12 @@ namespace EFCache
 
         private string CreateKey()
         {
-            return 
+            return
                 string.Format(
-                "{0}_{1}", 
-                CommandText, 
+                "{0}_{1}",
+                CommandText,
                 string.Join(
-                    "_", 
+                    "_",
                     Parameters.Cast<DbParameter>()
                     .Select(p => string.Format("{0}={1}", p.ParameterName, p.Value))));
         }

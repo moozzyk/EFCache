@@ -184,7 +184,7 @@ namespace EFCache
 
         public override bool IsDBNull(int ordinal)
         {
-            return GetValue(ordinal) == null;
+            return GetValue(ordinal) == DBNull.Value || GetValue(ordinal) == null;
         }
 
         public override bool NextResult()

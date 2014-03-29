@@ -8,7 +8,6 @@ namespace EFCache
     using System.Collections.ObjectModel;
     using System.Data.Entity.Core.Metadata.Edm;
 
-
     /// <summary>
     /// Caching policy.
     /// </summary>
@@ -29,7 +28,8 @@ namespace EFCache
         /// <param name="affectedEntitySets">Entity sets affected by the command.</param>
         /// <param name="minCacheableRows">The minimum number of cacheable rows.</param>
         /// <param name="maxCacheableRows">The maximum number of cacheable rows.</param>
-        protected internal abstract void GetCacheableRows(ReadOnlyCollection<EntitySetBase> affectedEntitySets, out int minCacheableRows, out int maxCacheableRows);
+        protected internal abstract void GetCacheableRows(ReadOnlyCollection<EntitySetBase> affectedEntitySets, 
+            out int minCacheableRows, out int maxCacheableRows);
 
         /// <summary>
         /// Gets the expiration timeout for a given command definition.
@@ -37,7 +37,6 @@ namespace EFCache
         /// <param name="affectedEntitySets">Entity sets affected by the command.</param>
         /// <param name="slidingExpiration">The sliding expiration time.</param>
         /// <param name="absoluteExpiration">The absolute expiration time.</param>
-        protected internal abstract void GetExpirationTimeout(ReadOnlyCollection<EntitySetBase> affectedEntitySets,
-            out TimeSpan slidingExpiration, out DateTimeOffset absoluteExpiration);
+        protected internal abstract void GetExpirationTimeout(ReadOnlyCollection<EntitySetBase> affectedEntitySets, out TimeSpan slidingExpiration, out DateTimeOffset absoluteExpiration);
     }
 }

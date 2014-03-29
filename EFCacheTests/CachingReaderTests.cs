@@ -255,14 +255,26 @@ namespace EFCache
         }
 
         [Fact]
-        void IsDBNull_returns_true_for_null_column_value()
+        void IsDBNull_returns_true_for_null_column_value() 
         {
-            using (var reader = CreateCachingReader(1))
+            using (var reader = CreateCachingReader(1)) 
             {
                 var result = reader.Read();
                 Assert.True(result);
 
                 Assert.True(reader.IsDBNull(1));
+            }
+        }
+
+        [Fact]
+        void IsDBNull_returns_true_for_DBNull_column_value() 
+        {
+            using (var reader = CreateCachingReader(12)) 
+            {
+                var result = reader.Read();
+                Assert.True(result);
+
+                Assert.True(reader.IsDBNull(12));
             }
         }
 
@@ -1098,7 +1110,7 @@ namespace EFCache
         {
             for (int i = 0; i < count; i++)
             {
-                var row = new object[12];
+                var row = new object[13];
                 row[0] = i;
                 row[1] = null;
                 row[2] = i.ToString();
@@ -1111,6 +1123,7 @@ namespace EFCache
                 row[9] = 21m;
                 row[10] = new DateTime(2001, 11, 17);
                 row[11] = (byte)15;
+                row[12] = DBNull.Value;
 
                 yield return row;
             }

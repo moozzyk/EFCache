@@ -2,8 +2,10 @@
 
 namespace EFCache
 {
+    using System;
     using System.Collections.Generic;
 
+    [Serializable]
     internal class CachedResults
     {
         private readonly ColumnMetadata[] _tableMetadata;

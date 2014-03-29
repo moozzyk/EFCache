@@ -15,7 +15,7 @@ namespace EFCache
         {
             if (key == null)
             {
-                throw new ArgumentNullException("key");    
+                throw new ArgumentNullException("key");
             }
 
             value = null;

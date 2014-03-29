@@ -54,10 +54,10 @@ namespace EFCache
         {
             var cache = new InMemoryCache();
 
-            cache.PutItem("1", new object(), new[] {"ES1", "ES2"}, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
-            cache.PutItem("2", new object(), new[] {"ES2", "ES3"}, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
-            cache.PutItem("3", new object(), new[] {"ES1", "ES3", "ES4"}, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
-            cache.PutItem("4", new object(), new[] {"ES3", "ES4"}, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
+            cache.PutItem("1", new object(), new[] { "ES1", "ES2" }, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
+            cache.PutItem("2", new object(), new[] { "ES2", "ES3" }, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
+            cache.PutItem("3", new object(), new[] { "ES1", "ES3", "ES4" }, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
+            cache.PutItem("4", new object(), new[] { "ES3", "ES4" }, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
 
             cache.InvalidateSets(new [] {"ES1", "ES2"});
 

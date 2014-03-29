@@ -51,7 +51,7 @@ namespace EFCache
             new Dictionary<string, object>();
 
         private readonly Dictionary<string, List<string>> _setToCacheKey 
-            = new Dictionary<string, List<string>>(); 
+            = new Dictionary<string, List<string>>();
 
         public bool GetItem(string key, out object value)
         {

@@ -366,7 +366,7 @@ namespace EFCache
             var mockCachingPolicy = new Mock<CachingPolicy>();
             mockCachingPolicy
                 .Setup(p => p.GetExpirationTimeout(
-                            It.IsAny<ReadOnlyCollection<EntitySetBase>>(), 
+                            It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                             out slidingExpiration, out absoluteExpiration));
             mockCachingPolicy
                 .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
@@ -374,7 +374,7 @@ namespace EFCache
 
             int minCachableRows = 0, maxCachableRows = int.MaxValue;
             mockCachingPolicy
-                .Setup(p => p.GetCacheableRows(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), 
+                .Setup(p => p.GetCacheableRows(It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                     out minCachableRows, out maxCachableRows));
 
             var cachingCommand = new CachingCommand(
@@ -573,8 +573,8 @@ namespace EFCache
             var mockCachingPolicy = new Mock<CachingPolicy>();
             mockCachingPolicy
                 .Setup(p => p.GetExpirationTimeout(
-                            It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
-                            out slidingExpiration, out absoluteExpiration));
+                        It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
+                        out slidingExpiration, out absoluteExpiration));
             mockCachingPolicy
                 .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
                 .Returns(true);
@@ -588,6 +588,7 @@ namespace EFCache
 
             Assert.Same(retValue, result);
             object value;
+
             mockTransactionHandler.Verify(
                 h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out value), Times.Once);
  
@@ -596,7 +597,7 @@ namespace EFCache
             mockTransactionHandler.Verify(
                 h => h.PutItem(
                     transaction,
-                    "Exec_P1=ZZZ_P2=123", 
+                    "Exec_P1=ZZZ_P2=123",
                     retValue, 
                     new[] {"ES1", "ES2"}, 
                     slidingExpiration, 
@@ -608,7 +609,6 @@ namespace EFCache
         public void ExecuteScalar_returns_cached_result_if_exists()
         {
             var retValue = new object();
-
             var transaction = Mock.Of<DbTransaction>();
 
             var mockCommand =
@@ -636,6 +636,7 @@ namespace EFCache
                     new DefaultCachingPolicy()).ExecuteScalar();
 
             Assert.Same(retValue, result);
+
             object value;
             mockTransactionHandler.Verify(
                 h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out value), Times.Once);
