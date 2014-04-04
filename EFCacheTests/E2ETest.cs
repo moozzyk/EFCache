@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
+using System.Transactions;
+
 namespace EFCache
 {
     using System;
@@ -12,6 +14,10 @@ namespace EFCache
     public class Entity
     {
         public int Id { get; set; }
+
+        public string Name { get; set; }
+
+        public bool? Flag { get; set; }
     }
 
     public class Item
@@ -111,7 +117,6 @@ namespace EFCache
                 var q = ctx.Entities.Where(e => e.Id == id);
                 q.ToList();
                 Assert.True(Cache.CacheDictionary.ContainsKey(q + "_p__linq__0=3"));
-                q.ToList();
             }
         }
 
@@ -162,8 +167,6 @@ namespace EFCache
         {
             Cache.PutItem("s", new object(), new[] { "Item", "Entity" }, new TimeSpan(), new DateTime());
 
-            var log = string.Empty;
-
             using (var ctx = new MyContext())
             {
                 using(var entityConnection = ((System.Data.Entity.Infrastructure.IObjectContextAdapter)ctx).ObjectContext.Connection)
@@ -184,5 +187,22 @@ namespace EFCache
                 }                
             }
         }
+
+        [Fact]
+        public void Can_read_null_values()
+        {
+            using (var trx = new TransactionScope())
+            {
+                using (var ctx = new MyContext())
+                {
+                    ctx.Entities.Add(new Entity());
+                    ctx.SaveChanges();
+                    var e = ctx.Entities.First();
+                    Assert.Null(e.Name);
+                    Assert.Null(e.Flag);
+                }
+            }
+        }
+
     }
 }
