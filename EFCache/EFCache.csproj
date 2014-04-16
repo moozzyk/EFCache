@@ -9,15 +9,18 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>EFCache</RootNamespace>
     <AssemblyName>EFCache</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <OutputPath Condition="'$(OutputPath)' == ''">bin\$(Configuration)\</OutputPath>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' != 'v4.0'">v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <InternalsVisibleToEnabled Condition=" $(InternalsVisibleToEnabled) == ''">true</InternalsVisibleToEnabled>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+    <DownloadNuGetExe>true</DownloadNuGetExe>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,7 +28,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -33,15 +35,33 @@
   <PropertyGroup>
     <DefineConstants Condition=" '$(InternalsVisibleToEnabled)'">$(DefineConstants);INTERNALSVISIBLETOENABLED</DefineConstants>
   </PropertyGroup>
+  <Choose>
+    <When Condition="'$(TargetFrameworkVersion)' == 'v4.0'">
+      <ItemGroup>
+        <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>..\packages\EntityFramework.6.1.0\lib\net40\EntityFramework.dll</HintPath>
+        </Reference>
+        <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>..\packages\EntityFramework.6.1.0\lib\net40\EntityFramework.SqlServer.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.dll</HintPath>
+        </Reference>
+        <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
-    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -70,20 +90,37 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   
-  <Target Name="BuildSigned">
+  <Target Name="CreatePackage" DependsOnTargets="CheckPrerequisites">
     <Error Text="KeyFile parameter not spercified (/p:KeyFile=MyKey.snk)" Condition=" '$(KeyFile)' == ''" />
-    
-    <MSBuild Projects="EFCache.csproj" Targets="Rebuild"
-     Properties="InternalsVisibleToEnabled=false;SignAssembly=true;AssemblyOriginatorKeyFile=$(KeyFile)" BuildInParallel="$(BuildInParallel)" />     
+    <PropertyGroup>
+      <Configuration>Release</Configuration>
+      <PackageSource>bin\$(Configuration)\Package\</PackageSource>
+    </PropertyGroup>
+    <RemoveDir Directories="$(PackageSource)" />
+    <MSBuild Projects="EFCache.csproj" Targets="Rebuild" Properties="InternalsVisibleToEnabled=false;SignAssembly=true;AssemblyOriginatorKeyFile=$(KeyFile);TargetFrameworkVersion=v4.5;OutputPath=bin\$(Configuration)\net45;Configuration=$(Configuration)" BuildInParallel="$(BuildInParallel)" />
+    <MSBuild Projects="EFCache.csproj" Targets="Rebuild" Properties="InternalsVisibleToEnabled=false;SignAssembly=true;AssemblyOriginatorKeyFile=$(KeyFile);TargetFrameworkVersion=v4.0;OutputPath=bin\$(Configuration)\net40;Configuration=$(Configuration)" BuildInParallel="$(BuildInParallel)" />
+    <Copy SourceFiles="bin\$(Configuration)\net45\$(AssemblyName).dll" DestinationFolder="$(PackageSource)\lib\net45" />
+    <Copy SourceFiles="bin\$(Configuration)\net40\$(AssemblyName).dll" DestinationFolder="$(PackageSource)\lib\net40" />
+    <Copy SourceFiles="..\tools\EntityFramework.Cache.nuspec" DestinationFolder="$(PackageSource)" />
+    <Exec Command='$(NuGetCommand) pack ..\tools\EntityFramework.Cache.nuspec -BasePath $(PackageSource) -OutputDirectory bin\$(Configuration)' LogStandardErrorAsError="true" />
   </Target>
-
+  
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
