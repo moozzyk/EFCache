@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
+using System.Linq.Expressions;
+
 namespace EFCache
 {
     using System;
@@ -9,6 +11,8 @@ namespace EFCache
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
+    using System.Threading.Tasks;
     
     internal class CachingCommand : DbCommand
     {
@@ -180,32 +184,77 @@ namespace EFCache
                     queryResults.Add(values);
                 }
 
-                var cachedResults = 
-                    new CachedResults(
-                        GetTableMetadata(reader), queryResults, reader.RecordsAffected);
-
-                int minCacheableRows, maxCachableRows;
-                _cachingPolicy.GetCacheableRows(_commandTreeFacts.AffectedEntitySets, out minCacheableRows, out maxCachableRows);
-
-                if (queryResults.Count >= minCacheableRows && queryResults.Count <= maxCachableRows)
-                {
-                    TimeSpan slidingExpiration;
-                    DateTimeOffset absoluteExpiration;
-                    _cachingPolicy.GetExpirationTimeout(_commandTreeFacts.AffectedEntitySets, out slidingExpiration,
-                        out absoluteExpiration);
-
-                    _cacheTransactionHandler.PutItem(
-                        Transaction,
-                        key,
-                        cachedResults,
-                        _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                        slidingExpiration,
-                        absoluteExpiration);
-                }
-
-                return new CachingReader(cachedResults);
+                return HandleCaching(reader, key, queryResults);
             }
         }
+
+#if !NET40
+        protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+        {
+            if (!IsCacheable)
+            {
+                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
+
+                if (!_commandTreeFacts.IsQuery)
+                {
+                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name));
+                }
+
+                return result;
+            }
+
+            var key = CreateKey();
+
+            object value;
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value))
+            {
+                return new CachingReader((CachedResults)value);
+            }
+
+            using (var reader = await _command.ExecuteReaderAsync(behavior, cancellationToken))
+            {
+                var queryResults = new List<object[]>();
+
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    var values = new object[reader.FieldCount];
+                    reader.GetValues(values);
+                    queryResults.Add(values);
+                }
+
+                return HandleCaching(reader, key, queryResults);
+            }
+        }
+
+        private DbDataReader HandleCaching(DbDataReader reader, string key, List<object[]> queryResults)
+        {
+            var cachedResults =
+                new CachedResults(
+                    GetTableMetadata(reader), queryResults, reader.RecordsAffected);
+
+            int minCacheableRows, maxCachableRows;
+            _cachingPolicy.GetCacheableRows(_commandTreeFacts.AffectedEntitySets, out minCacheableRows,
+                out maxCachableRows);
+
+            if (queryResults.Count >= minCacheableRows && queryResults.Count <= maxCachableRows)
+            {
+                TimeSpan slidingExpiration;
+                DateTimeOffset absoluteExpiration;
+                _cachingPolicy.GetExpirationTimeout(_commandTreeFacts.AffectedEntitySets, out slidingExpiration,
+                    out absoluteExpiration);
+
+                _cacheTransactionHandler.PutItem(
+                    Transaction,
+                    key,
+                    cachedResults,
+                    _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
+                    slidingExpiration,
+                    absoluteExpiration);
+            }
+
+            return new CachingReader(cachedResults);
+        }
+#endif
 
         protected override void Dispose(bool disposing)
         {
@@ -233,12 +282,28 @@ namespace EFCache
         {
             var recordsAffected = _command.ExecuteNonQuery();
 
+            InvalidateSetsForNonQuery(recordsAffected);
+
+            return recordsAffected;
+        }
+
+#if !NET40
+        public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+        {
+            var recordsAffected = await _command.ExecuteNonQueryAsync(cancellationToken);
+
+            InvalidateSetsForNonQuery(recordsAffected);
+
+            return recordsAffected;
+        }
+#endif
+
+        private void InvalidateSetsForNonQuery(int recordsAffected)
+        {
             if (recordsAffected > 0 && _commandTreeFacts.AffectedEntitySets.Any())
             {
                 _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name));
             }
-
-            return recordsAffected;
         }
 
         public override object ExecuteScalar()
@@ -273,6 +338,41 @@ namespace EFCache
 
             return value;
         }
+
+#if !NET40
+        public async override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
+        {
+            if (!IsCacheable)
+            {
+                return await _command.ExecuteScalarAsync(cancellationToken);
+            }
+
+            var key = CreateKey();
+
+            object value;
+
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value))
+            {
+                return value;
+            }
+
+            value = await _command.ExecuteScalarAsync(cancellationToken);
+
+            TimeSpan slidingExpiration;
+            DateTimeOffset absoluteExpiration;
+            _cachingPolicy.GetExpirationTimeout(_commandTreeFacts.AffectedEntitySets, out slidingExpiration, out absoluteExpiration);
+
+            _cacheTransactionHandler.PutItem(
+                Transaction,
+                key,
+                value,
+                _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
+                slidingExpiration,
+                absoluteExpiration);
+
+            return value;
+        }
+#endif
 
         public override void Prepare()
         {

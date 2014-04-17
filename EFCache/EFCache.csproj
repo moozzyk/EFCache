@@ -34,6 +34,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants Condition=" '$(InternalsVisibleToEnabled)'">$(DefineConstants);INTERNALSVISIBLETOENABLED</DefineConstants>
+    <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v4.0'">$(DefineConstants);NET40</DefineConstants>
   </PropertyGroup>
   <Choose>
     <When Condition="'$(TargetFrameworkVersion)' == 'v4.0'">

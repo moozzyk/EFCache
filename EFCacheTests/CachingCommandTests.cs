@@ -13,6 +13,8 @@ namespace EFCache
     using System.Data.Entity.Core.Metadata.Edm;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Xunit;
 
     public class CachingCommandTests : TestBase
@@ -735,7 +737,6 @@ namespace EFCache
                     Times.Never);
         }
 
-
         [Fact]
         public void ExecuteNonQuery_invalidates_cache_for_given_entity_sets_if_any_affected_records()
         {
@@ -836,6 +837,11 @@ namespace EFCache
                     .Protected()
                     .Setup<DbDataReader>("ExecuteDbDataReader", ItExpr.IsAny<CommandBehavior>())
                     .Returns(reader);
+
+                mockCommand
+                    .Protected()
+                    .Setup<Task<DbDataReader>>("ExecuteDbDataReaderAsync", ItExpr.IsAny<CommandBehavior>(), ItExpr.IsAny<CancellationToken>())
+                    .Returns(Task.FromResult(reader));
             }
 
             mockCommand
@@ -886,6 +892,10 @@ namespace EFCache
                 .Setup(r => r.Read())
                 .Returns(() => resultCount-- > 0);
 
+            mockReader
+                .Setup(r => r.ReadAsync(It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult(resultCount-- > 0));
+
             return mockReader;
         }
 
@@ -931,6 +941,583 @@ namespace EFCache
             }
 
             return entitySets.AsReadOnly();
+        }
+
+        public class AsyncTests
+        {
+            [Fact]
+            public void ExecuteNonQueryAsync_invokes_ExecuteNonQueryAsync_method_on_wrapped_command()
+            {
+                var mockCommand = new Mock<DbCommand>();
+                mockCommand
+                    .Setup(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(42));
+
+                Assert.Equal(42,
+                    new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
+                        new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
+                        Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync().Result);
+
+                mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once);
+            }
+
+            [Fact]
+            public void ExecuteNonQueryAsync_invalidates_cache_for_given_entity_sets_if_any_affected_records()
+            {
+                var transaction = Mock.Of<DbTransaction>();
+                var mockCommand = CreateMockCommand(transaction: transaction);
+                mockCommand
+                    .Setup(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(1));
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var rowsAffected = new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                    mockTransactionHandler.Object,
+                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync().Result;
+
+                Assert.Equal(rowsAffected, 1);
+                mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
+                mockTransactionHandler
+                    .Verify(h => h.InvalidateSets(transaction, new[] {"ES1", "ES2"}), Times.Once());
+            }
+
+            [Fact]
+            public void ExecuteNonQueryAsync_does_not_invalidate_cache_if_no_records_affected()
+            {
+                var mockCommand = new Mock<DbCommand>();
+                mockCommand
+                    .Setup(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(0));
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var rowsAffected = new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                    mockTransactionHandler.Object,
+                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync().Result;
+
+                Assert.Equal(rowsAffected, 0);
+                mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
+                mockTransactionHandler
+                    .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>()),
+                        Times.Never());
+            }
+
+            [Fact]
+            public void ExecuteNonQueryAsync_does_not_invalidate_cache_if_no_entitysets_affected()
+            {
+                var mockCommand = new Mock<DbCommand>();
+                mockCommand
+                    .Setup(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(1));
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var rowsAffected = new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, true),
+                    mockTransactionHandler.Object,
+                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync().Result;
+
+                Assert.Equal(rowsAffected, 1);
+                mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
+                mockTransactionHandler
+                    .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>()),
+                        Times.Never());
+            }
+
+            [Fact]
+            public void ExecuteScalarAsync_invokes_ExecuteScalarAsync_method_on_wrapped_command()
+            {
+                var retValue = new object();
+
+                var mockCommand = new Mock<DbCommand>();
+                mockCommand
+                    .Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(retValue));
+
+                Assert.Same(retValue,
+                    new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, true),
+                        new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
+                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync().Result);
+
+                mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
+            }
+
+            [Fact]
+            public void ExecuteScalarAsync_caches_result_for_cacheable_command()
+            {
+                var retValue = new object();
+                var transaction = Mock.Of<DbTransaction>();
+
+                var mockCommand =
+                    CreateMockCommand(
+                        CreateParameterCollection(new[] {"P1", "P2"}, new object[] {"ZZZ", 123}),
+                        transaction: transaction);
+
+                mockCommand
+                    .Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(retValue));
+                mockCommand
+                    .Setup(c => c.CommandText)
+                    .Returns("Exec");
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var slidingExpiration = new TimeSpan(20, 0, 0);
+                var absoluteExpiration = DateTimeOffset.Now.AddMinutes(20);
+                var mockCachingPolicy = new Mock<CachingPolicy>();
+                mockCachingPolicy
+                    .Setup(p => p.GetExpirationTimeout(
+                        It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
+                        out slidingExpiration, out absoluteExpiration));
+                mockCachingPolicy
+                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                    .Returns(true);
+
+                var result =
+                    new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                        mockTransactionHandler.Object,
+                        mockCachingPolicy.Object).ExecuteScalarAsync().Result;
+
+                Assert.Same(retValue, result);
+                object value;
+
+                mockTransactionHandler.Verify(
+                    h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out value), Times.Once);
+
+                mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+                mockTransactionHandler.Verify(
+                    h => h.PutItem(
+                        transaction,
+                        "Exec_P1=ZZZ_P2=123",
+                        retValue,
+                        new[] {"ES1", "ES2"},
+                        slidingExpiration,
+                        absoluteExpiration),
+                    Times.Once);
+            }
+
+            [Fact]
+            public void ExecuteScalarAsync_returns_cached_result_if_exists()
+            {
+                var retValue = new object();
+                var transaction = Mock.Of<DbTransaction>();
+
+                var mockCommand =
+                    CreateMockCommand(
+                        CreateParameterCollection(new[] {"P1", "P2"}, new object[] {"ZZZ", 123}),
+                        transaction: transaction);
+
+                mockCommand
+                    .Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(retValue));
+                mockCommand
+                    .Setup(c => c.CommandText)
+                    .Returns("Exec");
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+                mockTransactionHandler
+                    .Setup(h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out retValue))
+                    .Returns(true);
+
+                var result =
+                    new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                        mockTransactionHandler.Object,
+                        new DefaultCachingPolicy()).ExecuteScalarAsync().Result;
+
+                Assert.Same(retValue, result);
+
+                object value;
+                mockTransactionHandler.Verify(
+                    h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out value), Times.Once);
+
+                mockCommand.Verify(h => h.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+                mockTransactionHandler.Verify(
+                    h => h.PutItem(
+                        It.IsAny<DbTransaction>(),
+                        It.IsAny<string>(),
+                        It.IsAny<object>(),
+                        It.IsAny<IEnumerable<string>>(),
+                        It.IsAny<TimeSpan>(),
+                        It.IsAny<DateTime>()),
+                    Times.Never);
+            }
+
+            [Fact]
+            public void ExecuteScalarAsync_does_not_cache_results_for_non_cacheable_queries()
+            {
+                var retValue = new object();
+
+                var mockCommand = new Mock<DbCommand>();
+                mockCommand
+                    .Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(retValue));
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var result =
+                    new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                        mockTransactionHandler.Object,
+                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync().Result;
+
+                Assert.Same(retValue, result);
+                object value;
+                mockTransactionHandler.Verify(
+                    h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value), Times.Never);
+
+                mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+                mockTransactionHandler.Verify(
+                    h => h.PutItem(
+                        It.IsAny<DbTransaction>(),
+                        It.IsAny<string>(),
+                        It.IsAny<object>(),
+                        It.IsAny<IEnumerable<string>>(),
+                        It.IsAny<TimeSpan>(),
+                        It.IsAny<DateTime>()),
+                    Times.Never);
+            }
+
+            [Fact]
+            public void ExecuteScalarAsync_does_not_cache_results_if_non_cacheable_per_CachingPolicy()
+            {
+                var retValue = new object();
+
+                var mockCommand = new Mock<DbCommand>();
+                mockCommand
+                    .Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()))
+                    .Returns(Task.FromResult(retValue));
+                mockCommand
+                    .Setup(c => c.CommandText)
+                    .Returns("Exec");
+                mockCommand
+                    .Protected()
+                    .Setup<DbParameterCollection>("DbParameterCollection")
+                    .Returns(CreateParameterCollection(new[] {"P1", "P2"}, new object[] {"ZZZ", 123}));
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var result =
+                    new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                        mockTransactionHandler.Object,
+                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync().Result;
+
+                Assert.Same(retValue, result);
+                object value;
+                mockTransactionHandler.Verify(
+                    h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value), Times.Never);
+
+                mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
+
+                mockTransactionHandler.Verify(
+                    h => h.PutItem(
+                        It.IsAny<DbTransaction>(),
+                        It.IsAny<string>(),
+                        It.IsAny<object>(),
+                        It.IsAny<IEnumerable<string>>(),
+                        It.IsAny<TimeSpan>(),
+                        It.IsAny<DateTime>()),
+                    Times.Never);
+            }
+
+            [Fact]
+            public void ExecuteDbDataReaderAsync_invokes_ExecuteReader_method_on_wrapped_command()
+            {
+                var mockCommand = new Mock<DbCommand>();
+                mockCommand
+                    .Protected()
+                    .Setup<Task<DbDataReader>>("ExecuteDbDataReaderAsync", ItExpr.IsAny<CommandBehavior>(),
+                        ItExpr.IsAny<CancellationToken>())
+                    .Returns(Task.FromResult(Mock.Of<DbDataReader>()));
+
+                new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, true),
+                    new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
+                    Mock.Of<CachingPolicy>())
+                    .ExecuteReaderAsync(CommandBehavior.SequentialAccess).GetAwaiter().GetResult();
+
+                mockCommand
+                    .Protected()
+                    .Verify<Task<DbDataReader>>(
+                        "ExecuteDbDataReaderAsync", Times.Once(), CommandBehavior.SequentialAccess,
+                        ItExpr.IsAny<CancellationToken>());
+            }
+
+            [Fact]
+            public void ExecuteDbDataReaderAsync_consumes_results_and_creates_CachingReader_if_query_cacheable()
+            {
+                var mockReader = CreateMockReader(1);
+                var mockCommand =
+                    CreateMockCommand(reader: mockReader.Object);
+
+                var cachingCommand =
+                    new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
+                        new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
+                        new DefaultCachingPolicy());
+                var reader = cachingCommand.ExecuteReaderAsync().Result;
+
+                Assert.IsType<CachingReader>(reader);
+                mockReader
+                    .Protected()
+                    .Verify("Dispose", Times.Once(), true);
+
+                Assert.True(reader.Read());
+                Assert.Equal("int", reader.GetDataTypeName(0));
+                Assert.Equal(typeof (int), reader.GetFieldType(0));
+                Assert.Equal("Id", reader.GetName(0));
+                Assert.Equal("nvarchar", reader.GetDataTypeName(1));
+                Assert.Equal(typeof (string), reader.GetFieldType(1));
+                Assert.Equal("Name", reader.GetName(1));
+            }
+
+            [Fact]
+            public void ExecuteDbDataReaderAsync_does_not_create_CachingReader_if_query_non_cacheable()
+            {
+                var mockReader = CreateMockReader(1);
+                var mockCommand =
+                    CreateMockCommand(reader: mockReader.Object);
+
+                var cachingCommand =
+                    new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, true),
+                        new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
+                        Mock.Of<CachingPolicy>());
+
+                using (var reader = cachingCommand.ExecuteReaderAsync().Result)
+                {
+                    Assert.IsNotType<CachingReader>(reader);
+                    mockReader
+                        .Protected()
+                        .Verify("Dispose", Times.Never(), true);
+                }
+            }
+
+            [Fact]
+            public void Results_cached_for_cacheable_queries_Async()
+            {
+                var mockReader = CreateMockReader(1);
+                var transaction = Mock.Of<DbTransaction>();
+
+                var mockCommand =
+                    CreateMockCommand(CreateParameterCollection(
+                        new[] {"Param1", "Param2"},
+                        new object[] {123, "abc"}),
+                        mockReader.Object,
+                        transaction);
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var slidingExpiration = new TimeSpan(20, 0, 0);
+                var absoluteExpiration = DateTimeOffset.Now.AddMinutes(20);
+                var mockCachingPolicy = new Mock<CachingPolicy>();
+                mockCachingPolicy
+                    .Setup(p => p.GetExpirationTimeout(
+                        It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
+                        out slidingExpiration, out absoluteExpiration));
+                mockCachingPolicy
+                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                    .Returns(true);
+
+                int minCachableRows = 0, maxCachableRows = int.MaxValue;
+                mockCachingPolicy
+                    .Setup(p => p.GetCacheableRows(It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
+                        out minCachableRows, out maxCachableRows));
+
+                var cachingCommand = new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(
+                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                    mockTransactionHandler.Object,
+                    mockCachingPolicy.Object);
+
+                cachingCommand.ExecuteReaderAsync();
+
+                mockTransactionHandler.Verify(
+                    h => h.PutItem(
+                        transaction,
+                        "Query_Param1=123_Param2=abc",
+                        It.Is<CachedResults>(
+                            r => r.Results.Count == 1 && r.RecordsAffected == 1 && r.TableMetadata.Length == 2),
+                        It.Is<IEnumerable<string>>(es => es.SequenceEqual(new[] {"ES1", "ES2"})),
+                        slidingExpiration,
+                        absoluteExpiration),
+                    Times.Once());
+            }
+
+            [Fact]
+            public void Results_not_cached_for_non_cacheable_queries_Async()
+            {
+                var reader = new Mock<DbDataReader>().Object;
+                var mockCommand = CreateMockCommand(reader: reader);
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var cachingCommand = new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(
+                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: true),
+                    mockTransactionHandler.Object,
+                    Mock.Of<CachingPolicy>());
+
+                using (var r = cachingCommand.ExecuteReaderAsync().Result)
+                {
+                    Assert.Same(reader, r);
+
+                    object value;
+
+                    mockTransactionHandler.Verify(
+                        c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value),
+                        Times.Never());
+
+                    mockTransactionHandler.Verify(
+                        h => h.PutItem(
+                            It.IsAny<DbTransaction>(),
+                            It.IsAny<string>(),
+                            It.IsAny<object>(),
+                            It.IsAny<IEnumerable<string>>(),
+                            It.IsAny<TimeSpan>(),
+                            It.IsAny<DateTime>()),
+                        Times.Never());
+                }
+            }
+
+            [Fact]
+            public void Results_not_cached_if_results_non_cacheable_per_caching_policy_Async()
+            {
+                var reader = new Mock<DbDataReader>().Object;
+                var mockCommand = CreateMockCommand(reader: reader);
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var cachingCommand = new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(
+                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                    mockTransactionHandler.Object,
+                    Mock.Of<CachingPolicy>());
+
+                using (var r = cachingCommand.ExecuteReaderAsync().Result)
+                {
+                    Assert.Same(reader, r);
+
+                    object value;
+
+                    mockTransactionHandler.Verify(
+                        c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value),
+                        Times.Never());
+
+                    mockTransactionHandler.Verify(
+                        h => h.PutItem(
+                            It.IsAny<DbTransaction>(),
+                            It.IsAny<string>(),
+                            It.IsAny<object>(),
+                            It.IsAny<IEnumerable<string>>(),
+                            It.IsAny<TimeSpan>(),
+                            It.IsAny<DateTime>()),
+                        Times.Never());
+                }
+            }
+
+            [Fact]
+            public void Results_not_cached_if_too_many_or_to_few_rows_Async()
+            {
+                var cacheableRowLimits = new[]
+                {
+                    new {MinCacheableRows = 0, MaxCacheableRows = 4},
+                    new {MinCacheableRows = 6, MaxCacheableRows = 100}
+                };
+
+                foreach (var cachableRowLimit in cacheableRowLimits)
+                {
+                    var mockCommand = CreateMockCommand(reader: CreateMockReader(5).Object);
+
+                    var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                    var minCacheableRows = cachableRowLimit.MinCacheableRows;
+                    var maxCacheableRows = cachableRowLimit.MaxCacheableRows;
+
+                    var mockCachingPolicy = new Mock<CachingPolicy>();
+                    mockCachingPolicy
+                        .Setup(p => p.GetCacheableRows(
+                            It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
+                            out minCacheableRows, out maxCacheableRows));
+                    mockCachingPolicy
+                        .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                        .Returns(true);
+
+                    var cachingCommand = new CachingCommand(
+                        mockCommand.Object,
+                        new CommandTreeFacts(
+                            CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                        mockTransactionHandler.Object,
+                        mockCachingPolicy.Object);
+
+                    cachingCommand.ExecuteReaderAsync().GetAwaiter().GetResult();
+
+                    mockTransactionHandler.Verify(
+                        h => h.PutItem(
+                            It.IsAny<DbTransaction>(),
+                            It.IsAny<string>(),
+                            It.IsAny<CachedResults>(),
+                            It.IsAny<IEnumerable<string>>(),
+                            It.IsAny<TimeSpan>(),
+                            It.IsAny<DateTime>()),
+                        Times.Never());
+                }
+            }
+
+            [Fact]
+            public void ExecuteReader_on_wrapped_command_not_invoked_for_cached_results_Async()
+            {
+                var mockCommand = CreateMockCommand();
+
+                object value = new CachedResults(new ColumnMetadata[0], new List<object[]>(), 42);
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+                mockTransactionHandler
+                    .Setup(h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value))
+                    .Returns(true);
+
+                var cachingCommand = new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
+                    mockTransactionHandler.Object,
+                    new DefaultCachingPolicy());
+
+                using (var reader = cachingCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess).Result)
+                {
+                    Assert.Equal(42, reader.RecordsAffected);
+                }
+
+                mockCommand
+                    .Protected()
+                    .Verify<Task<DbDataReader>>(
+                        "ExecuteDbDataReaderAsync", Times.Never(), ItExpr.IsAny<CommandBehavior>(), 
+                        ItExpr.IsAny<CancellationToken>());
+            }
         }
     }
 }
