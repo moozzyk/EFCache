@@ -1,7 +1,5 @@
 ﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
-using System.Linq.Expressions;
-
 namespace EFCache
 {
     using System;
@@ -225,6 +223,7 @@ namespace EFCache
                 return HandleCaching(reader, key, queryResults);
             }
         }
+#endif
 
         private DbDataReader HandleCaching(DbDataReader reader, string key, List<object[]> queryResults)
         {
@@ -254,7 +253,6 @@ namespace EFCache
 
             return new CachingReader(cachedResults);
         }
-#endif
 
         protected override void Dispose(bool disposing)
         {

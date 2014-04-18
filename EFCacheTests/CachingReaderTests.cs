@@ -2,8 +2,10 @@
 
 namespace EFCache
 {
+    using Moq;
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using Xunit;
 
     public class CachingReaderTests : TestBase
@@ -13,13 +15,13 @@ namespace EFCache
         [Fact]
         public void Close_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.Close());
+            Action_throws_if_called_on_disposed_reader(reader => reader.Close());
         }
 
         [Fact]
         public void IsClosed_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => { var x = reader.IsClosed; });
+            Action_throws_if_called_on_disposed_reader(reader => { var x = reader.IsClosed; });
         }
 
         [Fact]
@@ -51,13 +53,13 @@ namespace EFCache
         [Fact]
         public void Read_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.Read());
+            Action_throws_if_called_on_disposed_reader(reader => reader.Read());
         }
 
         [Fact]
         public void Read_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.Read());
+            Action_throws_if_called_on_closed_reader(reader => reader.Read());
         }
 
         [Fact]
@@ -209,29 +211,29 @@ namespace EFCache
         [Fact]
         public void IsDBNull_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.IsDBNull(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.IsDBNull(0));
         }
 
         [Fact]
         public void IsDBNull_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.IsDBNull(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.IsDBNull(0));
         }
 
         [Fact]
         public void IsDBNull_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.IsDBNull(0));
+            Action_throws_if_called_before_first_read(reader => reader.IsDBNull(0));
         }
 
         [Fact]
         public void IsDBNull_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.IsDBNull(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.IsDBNull(0));
         }
 
         [Fact]
-        void IsDBNull_throws_for_negative_column_index()
+        public void IsDBNull_throws_for_negative_column_index()
         {
             using(var reader = CreateCachingReader(1))
             {
@@ -243,7 +245,7 @@ namespace EFCache
         }
 
         [Fact]
-        void IsDBNull_throws_for_invalid_column_index()
+        public void IsDBNull_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -255,7 +257,7 @@ namespace EFCache
         }
 
         [Fact]
-        void IsDBNull_returns_true_for_null_column_value() 
+        public void IsDBNull_returns_true_for_null_column_value() 
         {
             using (var reader = CreateCachingReader(1)) 
             {
@@ -267,7 +269,7 @@ namespace EFCache
         }
 
         [Fact]
-        void IsDBNull_returns_true_for_DBNull_column_value() 
+        public void IsDBNull_returns_true_for_DBNull_column_value() 
         {
             using (var reader = CreateCachingReader(12)) 
             {
@@ -279,7 +281,7 @@ namespace EFCache
         }
 
         [Fact]
-        void IsDBNull_returns_true_for_non_null_column_value()
+        public void IsDBNull_returns_true_for_non_null_column_value()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -297,29 +299,29 @@ namespace EFCache
         [Fact]
         public void GetValue_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetValue(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetValue(0));
         }
 
         [Fact]
         public void GetValue_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetValue(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetValue(0));
         }
 
         [Fact]
         public void GetValue_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetValue(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetValue(0));
         }
 
         [Fact]
         public void GetValue_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetValue(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetValue(0));
         }
         
         [Fact]
-        void GetValue_throws_for_negative_column_index()
+        public void GetValue_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -331,7 +333,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetValue_throws_for_invalid_column_index()
+        public void GetValue_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -343,7 +345,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetValue_returns_actual_value_for_column()
+        public void GetValue_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -361,30 +363,30 @@ namespace EFCache
         [Fact]
         public void GetInt32_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetInt32(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetInt32(0));
         }
 
         [Fact]
         public void GetInt32_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetInt32(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetInt32(0));
         }
 
         [Fact]
         public void GetInt32_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetInt32(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetInt32(0));
         }
 
         [Fact]
         public void GetInt32_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetInt32(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetInt32(0));
         }
 
         
         [Fact]
-        void GetInt32_throws_for_negative_column_index()
+        public void GetInt32_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -396,7 +398,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetInt32_throws_for_invalid_column_index()
+        public void GetInt32_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -408,7 +410,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetInt32_returns_actual_value_for_column()
+        public void GetInt32_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -426,29 +428,29 @@ namespace EFCache
         [Fact]
         public void GetString_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetString(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetString(0));
         }
 
         [Fact]
         public void GetString_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetString(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetString(0));
         }
 
         [Fact]
         public void GetString_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetString(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetString(0));
         }
 
         [Fact]
         public void GetString_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetString(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetString(0));
         }
 
         [Fact]
-        void GetString_throws_for_negative_column_index()
+        public void GetString_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -460,7 +462,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetString_throws_for_invalid_column_index()
+        public void GetString_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -472,7 +474,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetString_returns_actual_value_for_column()
+        public void GetString_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -490,29 +492,29 @@ namespace EFCache
         [Fact]
         public void GetBoolean_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetBoolean(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetBoolean(0));
         }
 
         [Fact]
         public void GetBoolean_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetBoolean(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetBoolean(0));
         }
 
         [Fact]
         public void GetBoolean_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetBoolean(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetBoolean(0));
         }
 
         [Fact]
         public void GetBoolean_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetBoolean(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetBoolean(0));
         }
 
         [Fact]
-        void GetBoolean_throws_for_negative_column_index()
+        public void GetBoolean_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -524,7 +526,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetBoolean_throws_for_invalid_column_index()
+        public void GetBoolean_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -536,7 +538,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetBoolean_returns_actual_value_for_column()
+        public void GetBoolean_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -554,29 +556,29 @@ namespace EFCache
         [Fact]
         public void GetInt64_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetInt64(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetInt64(0));
         }
 
         [Fact]
         public void GetInt64_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetInt64(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetInt64(0));
         }
 
         [Fact]
         public void GetInt64_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetInt64(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetInt64(0));
         }
 
         [Fact]
         public void GetInt64_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetInt64(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetInt64(0));
         }
 
         [Fact]
-        void GetInt64_throws_for_negative_column_index()
+        public void GetInt64_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -588,7 +590,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetInt64_throws_for_invalid_column_index()
+        public void GetInt64_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -600,7 +602,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetInt64_returns_actual_value_for_column()
+        public void GetInt64_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -618,29 +620,29 @@ namespace EFCache
         [Fact]
         public void GetInt16_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetInt16(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetInt16(0));
         }
 
         [Fact]
         public void GetInt16_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetInt16(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetInt16(0));
         }
 
         [Fact]
         public void GetInt16_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetInt16(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetInt16(0));
         }
 
         [Fact]
         public void GetInt16_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetInt16(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetInt16(0));
         }
 
         [Fact]
-        void GetInt16_throws_for_negative_column_index()
+        public void GetInt16_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -652,7 +654,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetInt16_throws_for_invalid_column_index()
+        public void GetInt16_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -664,7 +666,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetInt16_returns_actual_value_for_column()
+        public void GetInt16_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -682,29 +684,29 @@ namespace EFCache
         [Fact]
         public void GetGuid_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetGuid(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetGuid(0));
         }
 
         [Fact]
         public void GetGuid_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetGuid(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetGuid(0));
         }
 
         [Fact]
         public void GetGuid_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetGuid(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetGuid(0));
         }
 
         [Fact]
         public void GetGuid_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetGuid(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetGuid(0));
         }
 
         [Fact]
-        void GetGuid_throws_for_negative_column_index()
+        public void GetGuid_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -716,7 +718,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetGuid_throws_for_invalid_column_index()
+        public void GetGuid_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -728,7 +730,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetGuid_returns_actual_value_for_column()
+        public void GetGuid_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -748,29 +750,29 @@ namespace EFCache
         [Fact]
         public void GetFloat_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetFloat(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetFloat(0));
         }
 
         [Fact]
         public void GetFloat_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetFloat(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetFloat(0));
         }
 
         [Fact]
         public void GetFloat_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetFloat(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetFloat(0));
         }
 
         [Fact]
         public void GetFloat_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetFloat(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetFloat(0));
         }
         
         [Fact]
-        void GetFloat_throws_for_negative_column_index()
+        public void GetFloat_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -782,7 +784,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetFloat_throws_for_invalid_column_index()
+        public void GetFloat_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -794,7 +796,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetFloat_returns_actual_value_for_column()
+        public void GetFloat_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -812,29 +814,29 @@ namespace EFCache
         [Fact]
         public void GetDouble_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetDouble(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetDouble(0));
         }
 
         [Fact]
         public void GetDouble_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetDouble(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetDouble(0));
         }
 
         [Fact]
         public void GetDouble_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetDouble(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetDouble(0));
         }
 
         [Fact]
         public void GetDouble_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetDouble(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetDouble(0));
         }
 
         [Fact]
-        void GetDouble_throws_for_negative_column_index()
+        public void GetDouble_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -846,7 +848,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetDouble_throws_for_invalid_column_index()
+        public void GetDouble_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -858,7 +860,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetDouble_returns_actual_value_for_column()
+        public void GetDouble_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -876,29 +878,29 @@ namespace EFCache
         [Fact]
         public void GetDecimal_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetDecimal(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetDecimal(0));
         }
 
         [Fact]
         public void GetDecimal_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetDecimal(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetDecimal(0));
         }
 
         [Fact]
         public void GetDecimal_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetDecimal(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetDecimal(0));
         }
 
         [Fact]
         public void GetDecimal_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetDecimal(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetDecimal(0));
         }
 
         [Fact]
-        void GetDecimal_throws_for_negative_column_index()
+        public void GetDecimal_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -910,7 +912,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetDecimal_throws_for_invalid_column_index()
+        public void GetDecimal_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -922,7 +924,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetDecimal_returns_actual_value_for_column()
+        public void GetDecimal_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -940,29 +942,29 @@ namespace EFCache
         [Fact]
         public void GetDateTime_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetDateTime(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetDateTime(0));
         }
 
         [Fact]
         public void GetDateTime_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetDateTime(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetDateTime(0));
         }
 
         [Fact]
         public void GetDateTime_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetDateTime(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetDateTime(0));
         }
 
         [Fact]
         public void GetDateTime_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetDateTime(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetDateTime(0));
         }
 
         [Fact]
-        void GetDateTime_throws_for_negative_column_index()
+        public void GetDateTime_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -974,7 +976,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetDateTime_throws_for_invalid_column_index()
+        public void GetDateTime_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -986,7 +988,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetDateTime_returns_actual_value_for_column()
+        public void GetDateTime_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -1006,29 +1008,29 @@ namespace EFCache
         [Fact]
         public void GetByte_throws_if_called_on_disposed_reader()
         {
-            Action_throws_if_called_on_disposed_reader((reader) => reader.GetByte(0));
+            Action_throws_if_called_on_disposed_reader(reader => reader.GetByte(0));
         }
 
         [Fact]
         public void GetByte_throws_if_called_on_closed_reader()
         {
-            Action_throws_if_called_on_closed_reader((reader) => reader.GetByte(0));
+            Action_throws_if_called_on_closed_reader(reader => reader.GetByte(0));
         }
 
         [Fact]
         public void GetByte_throws_if_called_before_first_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetByte(0));
+            Action_throws_if_called_before_first_read(reader => reader.GetByte(0));
         }
 
         [Fact]
         public void GetByte_throws_if_called_after_all_rows_read()
         {
-            Action_throws_if_called_before_first_read((reader) => reader.GetByte(0));
+            Action_throws_if_called_after_all_rows_read(reader => reader.GetByte(0));
         }
 
         [Fact]
-        void GetByte_throws_for_negative_column_index()
+        public void GetByte_throws_for_negative_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -1040,7 +1042,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetByte_throws_for_invalid_column_index()
+        public void GetByte_throws_for_invalid_column_index()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -1052,7 +1054,7 @@ namespace EFCache
         }
 
         [Fact]
-        void GetByte_returns_actual_value_for_column()
+        public void GetByte_returns_actual_value_for_column()
         {
             using (var reader = CreateCachingReader(1))
             {
@@ -1068,7 +1070,74 @@ namespace EFCache
             GetChars
             GetBytes
          */
-        
+
+        [Fact]
+        public void GetFieldValue_calls_GetValue()
+        {
+            var mockCachingReader = new Mock<CachingReader>(
+                new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
+
+            mockCachingReader.Setup(r => r.GetFieldValue<int>(It.IsAny<int>())).CallBase();
+            mockCachingReader.Setup(r => r.GetValue(13)).Returns(42);
+
+            Assert.Equal(42, mockCachingReader.Object.GetFieldValue<int>(13));
+            mockCachingReader.Verify(r => r.GetFieldValue<int>(13), Times.Once());
+        }
+
+        public class AsyncTests
+        {
+            [Fact]
+            public void IsDBNullAsync_calls_IsDBNull()
+            {
+                var mockCachingReader = new Mock<CachingReader>(
+                    new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
+
+                mockCachingReader.Setup(r => r.IsDBNullAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).CallBase();
+                mockCachingReader.Object.IsDBNullAsync(42).GetAwaiter().GetResult();
+                mockCachingReader.Verify(r => r.IsDBNullAsync(42, It.IsAny<CancellationToken>()), Times.Once());
+            }
+
+            [Fact]
+            public void GetFieldValueAsync_calls_GetValue()
+            {
+                var mockCachingReader = new Mock<CachingReader>(
+                    new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
+
+                mockCachingReader.Setup(r => r.GetFieldValue<int>(It.IsAny<int>())).CallBase();
+                mockCachingReader.Setup(r => r.GetFieldValueAsync<int>(It.IsAny<int>(), It.IsAny<CancellationToken>())).CallBase();
+                mockCachingReader.Setup(r => r.GetValue(13)).Returns(42);
+
+                Assert.Equal(42, mockCachingReader.Object.GetFieldValueAsync<int>(13).Result);
+                mockCachingReader.Verify(r => r.GetFieldValue<int>(13), Times.Once());
+            }
+
+            [Fact]
+            public void ReadAsync_calls_Read()
+            {
+                var mockCachingReader = new Mock<CachingReader>(
+                    new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
+
+                mockCachingReader.Setup(r => r.ReadAsync(It.IsAny<CancellationToken>())).CallBase();
+                mockCachingReader.Setup(r => r.Read()).Returns(true);
+
+                Assert.True(mockCachingReader.Object.ReadAsync().Result);
+                mockCachingReader.Verify(r => r.Read(), Times.Once());   
+            }
+
+            [Fact]
+            public void MoveNextAsync_falls_back_to_MoveNext()
+            {
+                var mockCachingReader = new Mock<CachingReader>(
+                    new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
+
+                mockCachingReader.Setup(r => r.NextResultAsync(It.IsAny<CancellationToken>())).CallBase();
+                mockCachingReader.Setup(r => r.NextResult()).Returns(true);
+
+                Assert.True(mockCachingReader.Object.NextResultAsync().Result);
+                mockCachingReader.Verify(r => r.NextResult(), Times.Once());
+            }
+        }
+
         private static void Action_throws_if_called_on_disposed_reader(Action<CachingReader> action)
         {
             var reader = CreateCachingReader();
@@ -1094,8 +1163,7 @@ namespace EFCache
         private static void Action_throws_if_called_after_all_rows_read(Action<CachingReader> action)
         {
             var reader = CreateCachingReader();
-            bool read = reader.Read();
-            Assert.False(read);
+            Assert.False(reader.Read());
             Assert.Throws<InvalidOperationException>(() => action(reader));
         }
 
@@ -1108,7 +1176,7 @@ namespace EFCache
 
         private static IEnumerable<object[]> GetRows(int count)
         {
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var row = new object[13];
                 row[0] = i;

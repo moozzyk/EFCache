@@ -1,14 +1,11 @@
 ﻿TODO: 
 
-Alpha:
-- license/file headers
-
-RTM:
+Beta:
 - missing overrides - DbCommand
 - check dispose on DbCommand
-- async (commands, reader)
-- TransactionScope handling
+- async E2E test(s)
+- TransactionScope handling (?)
+- review TODOs in the code
 
 Maybe:
-- multiple resultsets ?
-- statistics - InMemoryCache(?)
+- multiple resultsets (consider only if supported in EF6.1.1 and CodeFirstStoreFunctions project)?

@@ -1,5 +1,8 @@
 ﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace EFCache
 {
     using System;
@@ -252,7 +255,7 @@ namespace EFCache
 
         private void EnsureNotEOF()
         {
-            if (_state == State.BOF)
+            if (_state == State.EOF)
             {
                 throw new InvalidOperationException("The operation is invalid after reading all data.");
             }

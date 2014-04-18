@@ -1240,7 +1240,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteDbDataReaderAsync_invokes_ExecuteReader_method_on_wrapped_command()
+            public void ExecuteDbDataReaderAsync_invokes_ExecuteReaderAsync_method_on_wrapped_command()
             {
                 var mockCommand = new Mock<DbCommand>();
                 mockCommand
