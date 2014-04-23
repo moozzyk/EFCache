@@ -256,17 +256,16 @@ namespace EFCache
 
         protected override void Dispose(bool disposing)
         {
-            // TODO: feels wrong
             _command.GetType()
                 .GetMethod("Dispose", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(_command, new object[] { true });
+                .Invoke(_command, new object[] { disposing });
         }
 
         private static ColumnMetadata[] GetTableMetadata(DbDataReader reader)
         {
             var columnMetadata = new ColumnMetadata[reader.FieldCount];
 
-            for (int i = 0; i < reader.FieldCount; i++)
+            for (var i = 0; i < reader.FieldCount; i++)
             {
                 columnMetadata[i] = 
                     new ColumnMetadata(
