@@ -1,7 +1,5 @@
 ﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
-using System.Transactions;
-
 namespace EFCache
 {
     using System;
@@ -9,6 +7,7 @@ namespace EFCache
     using System.Data.Entity;
     using System.Data.Entity.Core.Common;
     using System.Linq;
+    using System.Transactions;
     using Xunit;
 
     public class Entity
@@ -22,7 +21,9 @@ namespace EFCache
 
     public class Item
     {
-        public int Id { get; set; }
+        // using client generated key ensures inserting new entities with 
+        // ExecuteNonQuery(Async) instead of ExecuteDbDataReader(Async) 
+        public Guid Id { get; set; }
     }
 
     public class MyContext : DbContext
@@ -121,6 +122,19 @@ namespace EFCache
         }
 
         [Fact]
+        public void Cached_data_returned_from_cache_Async()
+        {
+            using (var ctx = new MyContext())
+            {
+                var id = 3;
+                var q = ctx.Entities.Where(e => e.Id == id);
+                q.ToListAsync().GetAwaiter().GetResult();
+
+                Assert.True(Cache.CacheDictionary.ContainsKey(q + "_p__linq__0=3"));
+            }
+        }
+
+        [Fact]
         public void Cache_cleared_on_implicit_transaction_commit()
         {
             Cache.PutItem("s", new object(), new[] {"Item", "Entity"}, new TimeSpan(), new DateTime());
@@ -128,7 +142,7 @@ namespace EFCache
             using (var ctx = new MyContext())
             {
                 ctx.Entities.Add(new Entity());
-                ctx.Items.Add(new Item());
+                ctx.Items.Add(new Item { Id = Guid.NewGuid()});
 
                 ctx.SaveChanges();
 
@@ -149,9 +163,35 @@ namespace EFCache
                     var trx = entityConnection.BeginTransaction();
 
                     ctx.Entities.Add(new Entity());
-                    ctx.Items.Add(new Item());
+                    ctx.Items.Add(new Item { Id = Guid.NewGuid() });
 
                     ctx.SaveChanges();
+
+                    Assert.True(Cache.CacheDictionary.ContainsKey("s"));
+
+                    trx.Commit();
+
+                    Assert.False(Cache.CacheDictionary.ContainsKey("s"));
+                }
+            }
+        }
+
+        [Fact]
+        public void Cache_cleared_on_explicit_transaction_commit_Async()
+        {
+            Cache.PutItem("s", new object(), new[] { "Item", "Entity" }, new TimeSpan(), new DateTime());
+
+            using (var ctx = new MyContext())
+            {
+                using (var entityConnection = ((System.Data.Entity.Infrastructure.IObjectContextAdapter)ctx).ObjectContext.Connection)
+                {
+                    entityConnection.Open();
+                    var trx = entityConnection.BeginTransaction();
+
+                    ctx.Entities.Add(new Entity());
+                    ctx.Items.Add(new Item { Id = Guid.NewGuid() });
+
+                    var x = ctx.SaveChangesAsync().GetAwaiter().GetResult();
 
                     Assert.True(Cache.CacheDictionary.ContainsKey("s"));
 
@@ -175,7 +215,7 @@ namespace EFCache
                     var trx = entityConnection.BeginTransaction();
 
                     ctx.Entities.Add(new Entity());
-                    ctx.Items.Add(new Item());
+                    ctx.Items.Add(new Item { Id = Guid.NewGuid() });
 
                     ctx.SaveChanges();
 
@@ -203,6 +243,5 @@ namespace EFCache
                 }
             }
         }
-
     }
 }

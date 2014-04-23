@@ -3,7 +3,6 @@
 Beta:
 - missing overrides - DbCommand
 - check dispose on DbCommand
-- async E2E test(s)
 - TransactionScope handling (?)
 - review TODOs in the code
 

@@ -1,8 +1,5 @@
 ﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace EFCache
 {
     using System;
@@ -12,7 +9,6 @@ namespace EFCache
     using System.Data.Common;
     using System.Diagnostics;
 
-    // TODO: Async!
     internal class CachingReader : DbDataReader
     {
         private enum State
