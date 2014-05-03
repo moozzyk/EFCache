@@ -371,7 +371,8 @@ namespace EFCache
                             It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                             out slidingExpiration, out absoluteExpiration));
             mockCachingPolicy
-                .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(),
+                            It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                 .Returns(true);
 
             int minCachableRows = 0, maxCachableRows = int.MaxValue;
@@ -497,7 +498,8 @@ namespace EFCache
                         It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                         out minCacheableRows, out maxCacheableRows));
                 mockCachingPolicy
-                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                                    It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                     .Returns(true);
 
                 var cachingCommand = new CachingCommand(
@@ -578,7 +580,8 @@ namespace EFCache
                         It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                         out slidingExpiration, out absoluteExpiration));
             mockCachingPolicy
-                .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                            It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                 .Returns(true);
 
             var result =
@@ -1080,7 +1083,8 @@ namespace EFCache
                         It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                         out slidingExpiration, out absoluteExpiration));
                 mockCachingPolicy
-                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                        It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                     .Returns(true);
 
                 var result =
@@ -1338,7 +1342,8 @@ namespace EFCache
                         It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                         out slidingExpiration, out absoluteExpiration));
                 mockCachingPolicy
-                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                        It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                     .Returns(true);
 
                 int minCachableRows = 0, maxCachableRows = int.MaxValue;
@@ -1465,7 +1470,8 @@ namespace EFCache
                             It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                             out minCacheableRows, out maxCacheableRows));
                     mockCachingPolicy
-                        .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>()))
+                        .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                            It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                         .Returns(true);
 
                     var cachingCommand = new CachingCommand(
@@ -1518,6 +1524,32 @@ namespace EFCache
                         "ExecuteDbDataReaderAsync", Times.Never(), ItExpr.IsAny<CommandBehavior>(), 
                         ItExpr.IsAny<CancellationToken>());
             }
+        }
+
+        [Fact]
+        public void CanBeCached_invoked_with_correct_parameters()
+        {
+            var affectedEntitySets = CreateEntitySets("ES1", "ES2");
+
+            var mockCommand = new Mock<DbCommand>();
+            mockCommand.Setup(c => c.ExecuteScalar()).Returns(new object());
+            mockCommand.Setup(c => c.CommandText).Returns("SELECT FROM");
+            mockCommand.Protected().Setup<DbParameterCollection>("DbParameterCollection")
+                .Returns(CreateParameterCollection(new[] { "P1", "P2" }, new object[] { "ZZZ", 123 }));
+
+            var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+            var mockCachingPolicy = new Mock<CachingPolicy>();
+
+            new CachingCommand(
+                mockCommand.Object,
+                new CommandTreeFacts(affectedEntitySets, true, false),
+                mockTransactionHandler.Object,
+                mockCachingPolicy.Object).ExecuteScalar();
+
+            mockCachingPolicy.Verify(m => m.CanBeCached(affectedEntitySets, "SELECT FROM",
+                It.Is<IEnumerable<KeyValuePair<string, object>>>(
+                    p => p.SequenceEqual(new Dictionary<string, object> { { "P1", "ZZZ" }, { "P2", 123 } }))), 
+                    Times.Once);
         }
     }
 }

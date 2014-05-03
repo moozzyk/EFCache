@@ -1,6 +1,7 @@
 ﻿TODO: 
 
 Beta:
+- extend caching policy to take sql + params
 - missing overrides - DbCommand
 - TransactionScope handling (?)
 - review TODOs in the code

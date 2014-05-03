@@ -12,7 +12,7 @@ namespace EFCache
         [Fact]
         public void CanBeCached_returns_true()
         {
-            Assert.True(new DefaultCachingPolicy().CanBeCached(new List<EntitySetBase>().AsReadOnly()));
+            Assert.True(new DefaultCachingPolicy().CanBeCached(new List<EntitySetBase>().AsReadOnly(), "sql", new Dictionary<string, object>()));
         }
 
         [Fact]

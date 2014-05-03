@@ -55,10 +55,12 @@ namespace EFCache
         private bool IsCacheable
         {
             get
-            {
-                return _commandTreeFacts.IsQuery && 
-                    !_commandTreeFacts.UsesNonDeterministicFunctions &&
-                    _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets);
+            {   
+                return _commandTreeFacts.IsQuery &&
+                       !_commandTreeFacts.UsesNonDeterministicFunctions &&
+                       _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, CommandText,
+                           Parameters.Cast<DbParameter>()
+                               .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value)));
             }
         }
 

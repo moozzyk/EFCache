@@ -8,11 +8,6 @@ namespace EFCache
 
     public class DefaultCachingPolicy : CachingPolicy
     {
-        protected internal override bool CanBeCached(ReadOnlyCollection<EntitySetBase> affectedEntitySets)
-        {
-            return true;
-        }
-
         protected internal override void GetCacheableRows(ReadOnlyCollection<EntitySetBase> affectedEntitySets, out int minCacheableRows, out int maxCacheableRows)
         {
             minCacheableRows = 0;

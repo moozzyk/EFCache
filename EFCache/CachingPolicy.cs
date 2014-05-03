@@ -5,6 +5,7 @@
 namespace EFCache
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Data.Entity.Core.Metadata.Edm;
 
@@ -16,11 +17,17 @@ namespace EFCache
         /// <summary>
         /// Determines whether the specified command definition can be cached.
         /// </summary>
-        /// /// <param name="affectedEntitySets">Entity sets affected by the command.</param>
+        /// <param name="affectedEntitySets">Entity sets affected by the command.</param>
+        /// <param name="sql">SQL statement for the command.</param>
+        /// <param name="parameters">Command parameters.</param>
         /// <returns>
-        /// A value of <c>true</c> if the specified command definition can be cached; otherwise, <c>false</c>.
+        /// <c>true</c> if the specified command definition can be cached; otherwise, <c>false</c>.
         /// </returns>
-        protected internal abstract bool CanBeCached(ReadOnlyCollection<EntitySetBase> affectedEntitySets);
+        protected internal virtual bool CanBeCached(ReadOnlyCollection<EntitySetBase> affectedEntitySets, string sql, 
+            IEnumerable<KeyValuePair<string, object>> parameters)
+        {
+            return true;
+        }
 
         /// <summary>
         /// Gets the minimum and maximum number cacheable rows for a given command definition.
