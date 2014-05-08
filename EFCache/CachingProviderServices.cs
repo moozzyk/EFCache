@@ -23,13 +23,18 @@ namespace EFCache
             _cachingPolicy = cachingPolicy ?? new DefaultCachingPolicy();
         }
 
+        public CachingPolicy CachingPolicy
+        {
+            get { return _cachingPolicy; }
+        }
+
         protected override DbCommandDefinition CreateDbCommandDefinition(DbProviderManifest providerManifest, DbCommandTree commandTree)
         {
             return new CachingCommandDefinition(
                 _providerServices.CreateCommandDefinition(providerManifest, commandTree), 
                 new CommandTreeFacts(commandTree),
                 _cacheTransactionHandler,
-                _cachingPolicy);
+                CachingPolicy);
         }
 
         protected override DbProviderManifest GetDbProviderManifest(string manifestToken)

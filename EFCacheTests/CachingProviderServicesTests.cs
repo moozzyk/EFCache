@@ -338,5 +338,16 @@ namespace EFCache
             var newCommand = newCommandDefinition.CreateCommand();
             Assert.Same(command, newCommand);
         }
+
+        [Fact]
+        public void Can_get_CachingPolicy()
+        {
+            var cachingPolicy = Mock.Of<CachingPolicy>();
+
+            Assert.Same(
+                cachingPolicy,
+                new CachingProviderServices(Mock.Of<DbProviderServices>(),
+                    new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object, cachingPolicy).CachingPolicy);
+        }
     }
 }
