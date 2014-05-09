@@ -6,6 +6,7 @@ namespace EFCache
     using System.Collections.Generic;
     using System.Data.Entity;
     using System.Data.Entity.Core.Common;
+    using System.Data.Entity.Infrastructure;
     using System.Linq;
     using System.Transactions;
     using Xunit;
@@ -241,6 +242,24 @@ namespace EFCache
                     Assert.Null(e.Name);
                     Assert.Null(e.Flag);
                 }
+            }
+        }
+
+        [Fact]
+        public void ObjectContext_GetCachingProviderServices_returns_correct_value()
+        {
+            using (var ctx = new MyContext())
+            {
+                Assert.NotNull(((IObjectContextAdapter) ctx).ObjectContext.GetCachingProviderServices());
+            }
+        }
+
+        [Fact]
+        public void DbContext_GetCachingProviderServices_returns_correct_value()
+        {
+            using (var ctx = new MyContext())
+            {
+                Assert.NotNull(ctx.GetCachingProviderServices());
             }
         }
     }
