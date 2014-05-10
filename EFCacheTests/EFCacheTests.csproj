@@ -61,6 +61,7 @@
     <Compile Include="CacheTransactionHandlerTests.cs" />
     <Compile Include="CachingCommandDefintionTests.cs" />
     <Compile Include="CachingCommandTests.cs" />
+    <Compile Include="CachingPolicyTests.cs" />
     <Compile Include="CachingProviderServicesTests.cs" />
     <Compile Include="CachingReaderTests.cs" />
     <Compile Include="ColumnMetadataTests.cs" />
