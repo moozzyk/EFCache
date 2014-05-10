@@ -67,7 +67,6 @@
     <Compile Include="ColumnMetadataTests.cs" />
     <Compile Include="CommandTreeFactsTests.cs" />
     <Compile Include="DbContextExtensionsTests.cs" />
-    <Compile Include="DefaultCahingPolicyTests.cs" />
     <Compile Include="E2ETest.cs" />
     <Compile Include="InMemoryCacheTests.cs" />
     <Compile Include="ObjectContextExtensionsTests.cs" />

@@ -12,7 +12,7 @@ namespace EFCache
     /// <summary>
     /// Caching policy.
     /// </summary>
-    public abstract class CachingPolicy
+    public class CachingPolicy
     {
         protected readonly HashSet<string> BlackListedQueries = new HashSet<string>();
 
@@ -37,8 +37,12 @@ namespace EFCache
         /// <param name="affectedEntitySets">Entity sets affected by the command.</param>
         /// <param name="minCacheableRows">The minimum number of cacheable rows.</param>
         /// <param name="maxCacheableRows">The maximum number of cacheable rows.</param>
-        protected internal abstract void GetCacheableRows(ReadOnlyCollection<EntitySetBase> affectedEntitySets, 
-            out int minCacheableRows, out int maxCacheableRows);
+        protected internal virtual void GetCacheableRows(ReadOnlyCollection<EntitySetBase> affectedEntitySets, 
+            out int minCacheableRows, out int maxCacheableRows)
+        {
+            minCacheableRows = 0;
+            maxCacheableRows = int.MaxValue;
+        }
 
         /// <summary>
         /// Gets the expiration timeout for a given command definition.
@@ -46,13 +50,18 @@ namespace EFCache
         /// <param name="affectedEntitySets">Entity sets affected by the command.</param>
         /// <param name="slidingExpiration">The sliding expiration time.</param>
         /// <param name="absoluteExpiration">The absolute expiration time.</param>
-        protected internal abstract void GetExpirationTimeout(ReadOnlyCollection<EntitySetBase> affectedEntitySets, out TimeSpan slidingExpiration, out DateTimeOffset absoluteExpiration);
+        protected internal virtual void GetExpirationTimeout(ReadOnlyCollection<EntitySetBase> affectedEntitySets, 
+            out TimeSpan slidingExpiration, out DateTimeOffset absoluteExpiration)
+        {
+            slidingExpiration = TimeSpan.MaxValue;
+            absoluteExpiration = DateTimeOffset.MaxValue;
+        }
 
         /// <summary>
         /// Adds the query to a list of queries that should not be cached.
         /// </summary>
         /// <param name="sql">Query to be added to the list of queries that should not be cached.</param>
-        public void AddBlacklistedQuery(string sql)
+        public virtual void AddBlacklistedQuery(string sql)
         {
             if (string.IsNullOrWhiteSpace(sql))
             {
@@ -67,7 +76,7 @@ namespace EFCache
         /// </summary>
         /// <param name="sql">Query to be removed from the list of queries that should not be cached.</param>
         /// <returns><c>true</c> if query was on the list. Otherwise <c>false</c>.</returns>
-        public bool RemoveBlacklistedQuery(string sql)
+        public virtual bool RemoveBlacklistedQuery(string sql)
         {
             if (string.IsNullOrWhiteSpace(sql))
             {

@@ -307,7 +307,7 @@ namespace EFCache
                     mockCommand.Object,
                     new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
                     new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
-                    new DefaultCachingPolicy());
+                    new CachingPolicy());
             var reader = cachingCommand.ExecuteReader();
             
             Assert.IsType<CachingReader>(reader);
@@ -539,7 +539,7 @@ namespace EFCache
                 mockCommand.Object,
                 new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
                 mockTransactionHandler.Object,
-                new DefaultCachingPolicy());
+                new CachingPolicy());
 
             using(var reader = cachingCommand.ExecuteReader(CommandBehavior.SequentialAccess))
             {
@@ -638,7 +638,7 @@ namespace EFCache
                     mockCommand.Object,
                     new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
                     mockTransactionHandler.Object,
-                    new DefaultCachingPolicy()).ExecuteScalar();
+                    new CachingPolicy()).ExecuteScalar();
 
             Assert.Same(retValue, result);
 
@@ -1141,7 +1141,7 @@ namespace EFCache
                         mockCommand.Object,
                         new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
                         mockTransactionHandler.Object,
-                        new DefaultCachingPolicy()).ExecuteScalarAsync().Result;
+                        new CachingPolicy()).ExecuteScalarAsync().Result;
 
                 Assert.Same(retValue, result);
 
@@ -1279,7 +1279,7 @@ namespace EFCache
                         mockCommand.Object,
                         new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
                         new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
-                        new DefaultCachingPolicy());
+                        new CachingPolicy());
                 var reader = cachingCommand.ExecuteReaderAsync().Result;
 
                 Assert.IsType<CachingReader>(reader);
@@ -1511,7 +1511,7 @@ namespace EFCache
                     mockCommand.Object,
                     new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
                     mockTransactionHandler.Object,
-                    new DefaultCachingPolicy());
+                    new CachingPolicy());
 
                 using (var reader = cachingCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess).Result)
                 {

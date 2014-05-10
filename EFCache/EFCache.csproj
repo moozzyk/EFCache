@@ -83,7 +83,6 @@
     <Compile Include="CachingReader.cs" />
     <Compile Include="CachingPolicy.cs" />
     <Compile Include="DbContextExtensions.cs" />
-    <Compile Include="DefaultCachingPolicy.cs" />
     <Compile Include="ICache.cs" />
     <Compile Include="ColumnMetadata.cs" />
     <Compile Include="CommandTreeFacts.cs" />

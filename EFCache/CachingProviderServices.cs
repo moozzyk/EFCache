@@ -20,7 +20,7 @@ namespace EFCache
         {
             _providerServices = providerServices;
             _cacheTransactionHandler = cacheTransactionHandler;
-            _cachingPolicy = cachingPolicy ?? new DefaultCachingPolicy();
+            _cachingPolicy = cachingPolicy ?? new CachingPolicy();
         }
 
         public CachingPolicy CachingPolicy
