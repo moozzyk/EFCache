@@ -132,5 +132,22 @@ namespace EFCache
 
             Assert.True(commandTreeFacts.UsesNonDeterministicFunctions);
         }
+
+        [Fact]
+        public void MetadataWorkspace_initialized_from_DbQueryCommandTree()
+        {
+            var workspace = new MetadataWorkspace();
+
+            var commandTreeFacts =
+                new CommandTreeFacts(
+                    new DbQueryCommandTree(
+                        workspace,
+                        DataSpace.CSpace,
+                        TypeUsage.CreateDefaultTypeUsage(
+                            PrimitiveType.GetEdmPrimitiveType(PrimitiveTypeKind.String)).Null(),
+                            validate: false));
+
+            Assert.Same(workspace, commandTreeFacts.MetadataWorkspace);
+        }
     }
 }

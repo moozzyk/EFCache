@@ -57,6 +57,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlacklistedQueriesRegistrarTests.cs" />
     <Compile Include="CachedResultsTests.cs" />
     <Compile Include="CacheTransactionHandlerTests.cs" />
     <Compile Include="CachingCommandDefintionTests.cs" />

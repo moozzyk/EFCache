@@ -28,7 +28,7 @@ namespace EFCache
                 "SqlServer.CURRENT_USER",
                 "SqlServer.CURRENT_TIMESTAMP",
                 "SqlServer.HOST_NAME",
-                "SqlServer.USER_NAME",
+                "SqlServer.USER_NAME"
             },
             StringComparer.OrdinalIgnoreCase);
 
@@ -54,32 +54,25 @@ namespace EFCache
             UsesNonDeterministicFunctions =
                 visitor.Functions.Any(f => NonDeterministicFunctions.Contains(
                         string.Format("{0}.{1}", f.NamespaceName, f.Name)));
+            MetadataWorkspace = commandTree.MetadataWorkspace;
         }
 
+        // testing only
         internal CommandTreeFacts(ReadOnlyCollection<EntitySetBase> affectedEntitySets, bool isQuery, bool usesNonDeterministicFunctions)
         {
             AffectedEntitySets = affectedEntitySets;
             IsQuery = isQuery;
             UsesNonDeterministicFunctions = usesNonDeterministicFunctions;
+            MetadataWorkspace = new MetadataWorkspace();
         }
 
-        public ReadOnlyCollection<EntitySetBase> AffectedEntitySets
-        {
-            get;
-            private set;
-        }
+        public ReadOnlyCollection<EntitySetBase> AffectedEntitySets { get; private set; }
 
-        public bool IsQuery
-        {
-            get;
-            private set;
-        }
+        public bool IsQuery { get; private set; }
 
-        public bool UsesNonDeterministicFunctions
-        {
-            get;
-            private set;
-        }
+        public bool UsesNonDeterministicFunctions { get; private set; }
+
+        public MetadataWorkspace MetadataWorkspace { get; private set; }
 
         private class CommandTreeVisitor : BasicCommandTreeVisitor
         {

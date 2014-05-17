@@ -158,7 +158,7 @@ namespace EFCache
 
             using (var ctx = new MyContext())
             {
-                using (var entityConnection = ((System.Data.Entity.Infrastructure.IObjectContextAdapter)ctx).ObjectContext.Connection)
+                using (var entityConnection = ((IObjectContextAdapter)ctx).ObjectContext.Connection)
                 {
                     entityConnection.Open();
                     var trx = entityConnection.BeginTransaction();
@@ -210,7 +210,7 @@ namespace EFCache
 
             using (var ctx = new MyContext())
             {
-                using(var entityConnection = ((System.Data.Entity.Infrastructure.IObjectContextAdapter)ctx).ObjectContext.Connection)
+                using(var entityConnection = ((IObjectContextAdapter)ctx).ObjectContext.Connection)
                 {
                     entityConnection.Open();
                     var trx = entityConnection.BeginTransaction();
@@ -260,6 +260,19 @@ namespace EFCache
             using (var ctx = new MyContext())
             {
                 Assert.NotNull(ctx.GetCachingProviderServices());
+            }
+        }
+
+        [Fact]
+        public void DbQuery_not_cached_if_NotCached_used()
+        {
+            using (var ctx = new MyContext())
+            {
+                var q = ctx.Entities.Where(e => e.Flag != null).OrderBy(e => e.Id).NotCached();
+                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
+                q.ToList();
+                Assert.False(Cache.CacheDictionary.Keys.Any(k => k.StartsWith(q.ToString())));
             }
         }
     }

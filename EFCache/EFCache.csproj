@@ -73,6 +73,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlacklistedQueriesRegistrar.cs" />
     <Compile Include="CachedResults.cs" />
     <Compile Include="CacheTransactionHandler.cs" />
     <Compile Include="CachingCommand.cs">
@@ -83,6 +84,7 @@
     <Compile Include="CachingReader.cs" />
     <Compile Include="CachingPolicy.cs" />
     <Compile Include="DbContextExtensions.cs" />
+    <Compile Include="QueryableExtensions.cs" />
     <Compile Include="ICache.cs" />
     <Compile Include="ColumnMetadata.cs" />
     <Compile Include="CommandTreeFacts.cs" />

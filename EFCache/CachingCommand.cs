@@ -58,9 +58,19 @@ namespace EFCache
             {   
                 return _commandTreeFacts.IsQuery &&
                        !_commandTreeFacts.UsesNonDeterministicFunctions &&
+                       !IsQueryBlacklisted &&
                        _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, CommandText,
                            Parameters.Cast<DbParameter>()
                                .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value)));
+            }
+        }
+
+        private bool IsQueryBlacklisted
+        {
+            get
+            {
+                return BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    _commandTreeFacts.MetadataWorkspace, CommandText);
             }
         }
 

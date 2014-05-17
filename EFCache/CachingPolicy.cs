@@ -14,8 +14,6 @@ namespace EFCache
     /// </summary>
     public class CachingPolicy
     {
-        protected readonly HashSet<string> BlackListedQueries = new HashSet<string>();
-
         /// <summary>
         /// Determines whether the specified command definition can be cached.
         /// </summary>
@@ -28,7 +26,7 @@ namespace EFCache
         protected internal virtual bool CanBeCached(ReadOnlyCollection<EntitySetBase> affectedEntitySets, string sql, 
             IEnumerable<KeyValuePair<string, object>> parameters)
         {
-            return !BlackListedQueries.Contains(sql);
+            return true;
         }
 
         /// <summary>
@@ -55,35 +53,6 @@ namespace EFCache
         {
             slidingExpiration = TimeSpan.MaxValue;
             absoluteExpiration = DateTimeOffset.MaxValue;
-        }
-
-        /// <summary>
-        /// Adds the query to a list of queries that should not be cached.
-        /// </summary>
-        /// <param name="sql">Query to be added to the list of queries that should not be cached.</param>
-        public virtual void AddBlacklistedQuery(string sql)
-        {
-            if (string.IsNullOrWhiteSpace(sql))
-            {
-                throw new ArgumentNullException("sql");
-            }
-
-            BlackListedQueries.Add(sql);
-        }
-
-        /// <summary>
-        /// Removes the query frome a list of queries that should not be cached.
-        /// </summary>
-        /// <param name="sql">Query to be removed from the list of queries that should not be cached.</param>
-        /// <returns><c>true</c> if query was on the list. Otherwise <c>false</c>.</returns>
-        public virtual bool RemoveBlacklistedQuery(string sql)
-        {
-            if (string.IsNullOrWhiteSpace(sql))
-            {
-                throw new ArgumentNullException("sql");
-            }
-
-            return BlackListedQueries.Remove(sql);
         }
     }
 }
