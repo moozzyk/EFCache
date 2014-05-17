@@ -275,5 +275,26 @@ namespace EFCache
                 Assert.False(Cache.CacheDictionary.Keys.Any(k => k.StartsWith(q.ToString())));
             }
         }
+
+        [Fact]
+        public void Can_manually_add_query_to_blacklisted_queries()
+        {
+            using (var ctx = new MyContext())
+            {
+                const string query = @"SELECT 
+    [GroupBy1].[A1] AS [C1]
+    FROM ( SELECT 
+        COUNT(1) AS [A1]
+        FROM [dbo].[Entities] AS [Extent1]
+        WHERE [Extent1].[Flag] IS NOT NULL
+    )  AS [GroupBy1]";
+
+                BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(
+                    ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, query);
+
+                var q = ctx.Entities.Count(e => e.Flag != null);
+                Assert.False(Cache.CacheDictionary.Keys.Any(k => k.StartsWith(query.ToString())));
+            }
+        }
     }
 }
