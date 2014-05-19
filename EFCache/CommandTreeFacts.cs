@@ -46,7 +46,6 @@ namespace EFCache
             {
                 Debug.Assert(commandTree is DbModificationCommandTree, "Unexpected command tree kind");
 
-                //TODO: need to visit params, return values etc.?
                 ((DbModificationCommandTree)commandTree).Target.Expression.Accept(visitor);
             }
 

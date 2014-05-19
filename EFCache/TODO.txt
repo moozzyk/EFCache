@@ -1,10 +1,5 @@
 ﻿TODO: 
 
-Beta:
-- extend caching policy to take sql + params
-- missing overrides - DbCommand
+1.1:
 - TransactionScope handling (?)
-- review TODOs in the code
-
-Maybe:
 - multiple resultsets (consider only if supported in EF6.1.1 and CodeFirstStoreFunctions project)?
