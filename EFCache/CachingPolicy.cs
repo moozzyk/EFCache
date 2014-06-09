@@ -14,6 +14,11 @@ namespace EFCache
     /// </summary>
     public class CachingPolicy
     {
+        protected internal virtual bool UseManualCaching
+        {
+            get { return false; }
+        }
+
         /// <summary>
         /// Determines whether the specified command definition can be cached.
         /// </summary>

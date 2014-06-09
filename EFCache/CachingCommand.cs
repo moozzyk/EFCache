@@ -11,7 +11,7 @@ namespace EFCache
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
-    
+
     internal class CachingCommand : DbCommand
     {
         private readonly DbCommand _command;
@@ -55,13 +55,15 @@ namespace EFCache
         private bool IsCacheable
         {
             get
-            {   
+            {
                 return _commandTreeFacts.IsQuery &&
                        !_commandTreeFacts.UsesNonDeterministicFunctions &&
-                       !IsQueryBlacklisted &&
-                       _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, CommandText,
-                           Parameters.Cast<DbParameter>()
-                               .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value)));
+                       (_cachingPolicy.UseManualCaching ?
+                           IsQueryManuallyCached :
+                           !IsQueryBlacklisted &&
+                           _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, CommandText,
+                               Parameters.Cast<DbParameter>()
+                                   .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value))));
             }
         }
 
@@ -70,6 +72,15 @@ namespace EFCache
             get
             {
                 return BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    _commandTreeFacts.MetadataWorkspace, CommandText);
+            }
+        }
+
+        private bool IsQueryManuallyCached
+        {
+            get
+            {
+                return ManuallyCachedQueriesRegistrar.Instance.IsQueryCached(
                     _commandTreeFacts.MetadataWorkspace, CommandText);
             }
         }
@@ -279,7 +290,7 @@ namespace EFCache
 
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                columnMetadata[i] = 
+                columnMetadata[i] =
                     new ColumnMetadata(
                         reader.GetName(i), reader.GetDataTypeName(i), reader.GetFieldType(i));
             }
@@ -326,7 +337,7 @@ namespace EFCache
 
             object value;
 
-            if(_cacheTransactionHandler.GetItem(Transaction, key, out value))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value))
             {
                 return value;
             }

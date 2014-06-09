@@ -28,6 +28,25 @@ namespace EFCache
             return source;
         }
 
+        /// <summary>
+        /// Marks the query as cacheable.
+        /// </summary>
+        /// <typeparam name="T">Query element type.</typeparam>
+        /// <param name="source">Query whose results won't be cached. Must not be null.</param>
+        public static IQueryable<T> Cached<T>(this IQueryable<T> source)
+            where T : class
+        {
+            var objectQuery = TryGetObjectQuery(source) ?? source as ObjectQuery;
+
+            if (objectQuery != null)
+            {
+                ManuallyCachedQueriesRegistrar.Instance.AddCachedQuery(
+                    objectQuery.Context.MetadataWorkspace, objectQuery.ToTraceString());
+            }
+
+            return source;
+        }
+
         private static ObjectQuery TryGetObjectQuery<T>(IQueryable<T> source)
         {
             var dbQuery = source as DbQuery<T>;

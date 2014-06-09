@@ -73,6 +73,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ManuallyCachedQueriesRegistrar.cs" />
     <Compile Include="BlacklistedQueriesRegistrar.cs" />
     <Compile Include="CachedResults.cs" />
     <Compile Include="CacheTransactionHandler.cs" />
