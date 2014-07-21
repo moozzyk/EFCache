@@ -6,13 +6,14 @@ namespace EFCache
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Data.Entity.Core.Common.CommandTrees;
+    using System.Data.Entity.Core.Mapping;
     using System.Data.Entity.Core.Metadata.Edm;
     using System.Diagnostics;
     using System.Linq;
 
     internal class CommandTreeFacts
     {
-        private static HashSet<string> NonDeterministicFunctions = new HashSet<string>(
+        private static readonly HashSet<string> NonDeterministicFunctions = new HashSet<string>(
             new[] {
                 "Edm.CurrentDateTime",
                 "Edm.CurrentUtcDateTime",
@@ -38,21 +39,45 @@ namespace EFCache
 
             var visitor = new CommandTreeVisitor();
 
-            if (commandTree.CommandTreeKind == DbCommandTreeKind.Query)
+            if (commandTree.CommandTreeKind == DbCommandTreeKind.Function)
             {
-                ((DbQueryCommandTree)commandTree).Query.Accept(visitor);
+                var edmFunction = ((DbFunctionCommandTree)commandTree).EdmFunction;
+
+                var containerMapping =
+                    commandTree.MetadataWorkspace.GetItemCollection(DataSpace.CSSpace).GetItems<EntityContainerMapping>().Single();
+
+                var entitySetMappings = 
+                containerMapping.EntitySetMappings.Where(
+                    esm => esm.ModificationFunctionMappings.Any(
+                        mfm => mfm.DeleteFunctionMapping.Function == edmFunction ||
+                        mfm.InsertFunctionMapping.Function == edmFunction ||
+                        mfm.UpdateFunctionMapping.Function == edmFunction));
+
+                AffectedEntitySets = 
+                    (from esm in entitySetMappings
+                    from etm in esm.EntityTypeMappings
+                    from mappingFragment in etm.Fragments.Where(f => f.StoreEntitySet != null)
+                    select mappingFragment.StoreEntitySet).Cast<EntitySetBase>().ToList().AsReadOnly();
             }
             else
             {
-                Debug.Assert(commandTree is DbModificationCommandTree, "Unexpected command tree kind");
+                if (commandTree.CommandTreeKind == DbCommandTreeKind.Query)
+                {
+                    ((DbQueryCommandTree)commandTree).Query.Accept(visitor);
+                }
+                else
+                {
+                    Debug.Assert(commandTree is DbModificationCommandTree, "Unexpected command tree kind");
 
-                ((DbModificationCommandTree)commandTree).Target.Expression.Accept(visitor);
+                    ((DbModificationCommandTree)commandTree).Target.Expression.Accept(visitor);
+                }
+
+                AffectedEntitySets = new ReadOnlyCollection<EntitySetBase>(visitor.EntitySets);
+                UsesNonDeterministicFunctions =
+                    visitor.Functions.Any(f => NonDeterministicFunctions.Contains(
+                            string.Format("{0}.{1}", f.NamespaceName, f.Name)));
             }
 
-            AffectedEntitySets = new ReadOnlyCollection<EntitySetBase>(visitor.EntitySets);
-            UsesNonDeterministicFunctions =
-                visitor.Functions.Any(f => NonDeterministicFunctions.Contains(
-                        string.Format("{0}.{1}", f.NamespaceName, f.Name)));
             MetadataWorkspace = commandTree.MetadataWorkspace;
         }
 

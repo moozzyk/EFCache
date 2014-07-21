@@ -27,6 +27,13 @@ namespace EFCache
         public Guid Id { get; set; }
     }
 
+    public class EntityMappedToSprocs
+    {
+        public int Id { get; set; }
+
+        public int Data { get; set; }
+    }
+
     public class MyContext : DbContext
     {
         static MyContext()
@@ -37,6 +44,15 @@ namespace EFCache
         public DbSet<Entity> Entities { get; set; }
 
         public DbSet<Item> Items { get; set; }
+
+        public DbSet<EntityMappedToSprocs> EntitiesMappedToSprocs { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<EntityMappedToSprocs>()
+                .MapToStoredProcedures()
+                .ToTable("EntitiesMappedToSprocs");
+        }
     }
 
     public class Configuration : DbConfiguration
@@ -184,7 +200,7 @@ namespace EFCache
 
             using (var ctx = new MyContext())
             {
-                using (var entityConnection = ((System.Data.Entity.Infrastructure.IObjectContextAdapter)ctx).ObjectContext.Connection)
+                using (var entityConnection = ((IObjectContextAdapter)ctx).ObjectContext.Connection)
                 {
                     entityConnection.Open();
                     var trx = entityConnection.BeginTransaction();
@@ -294,6 +310,26 @@ namespace EFCache
 
                 var q = ctx.Entities.Count(e => e.Flag != null);
                 Assert.False(Cache.CacheDictionary.Keys.Any(k => k.StartsWith(query.ToString())));
+            }
+        }
+
+        [Fact]
+        public void CUD_mapped_to_sprocs_reset_cache()
+        {
+            const string cachedItemKey =
+                "SELECT TOP (1) \r\n    [c].[Id] AS [Id], \r\n    [c].[Data] AS [Data]\r\n    FROM [dbo].[EntitiesMappedToSprocs] AS [c]_";
+
+            using (var ctx = new MyContext())
+            {
+                ctx.Database.ExecuteSqlCommand("INSERT INTO EntitiesMappedToSprocs VALUES(42)");
+                var entity = ctx.EntitiesMappedToSprocs.FirstOrDefault();
+                ctx.Entry(entity).State = EntityState.Modified;
+
+                Assert.True(Cache.CacheDictionary.ContainsKey(cachedItemKey));
+
+                ctx.SaveChanges();
+
+                Assert.False(Cache.CacheDictionary.ContainsKey(cachedItemKey));
             }
         }
     }
