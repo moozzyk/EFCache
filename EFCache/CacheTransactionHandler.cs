@@ -60,10 +60,17 @@ namespace EFCache
             }
         }
 
-        private void AddAffectedEntitySets(DbTransaction transaction, IEnumerable<string> affectedEntitySets)
+        protected void AddAffectedEntitySets(DbTransaction transaction, IEnumerable<string> affectedEntitySets)
         {
-            Debug.Assert(transaction != null, "transaction is null");
-            Debug.Assert(affectedEntitySets != null, "affectedEntitySets is null");
+            if (transaction == null)
+            {
+                throw new ArgumentNullException("transaction");
+            }
+
+            if (affectedEntitySets == null)
+            {
+                throw new ArgumentNullException("affectedEntitySets");
+            }
 
             var entitySets = _affectedSetsInTransaction.GetOrAdd(transaction, new List<string>());
             entitySets.AddRange(affectedEntitySets);
