@@ -134,7 +134,7 @@ namespace EFCache
                 var id = 3;
                 var q = ctx.Entities.Where(e => e.Id == id);
                 q.ToList();
-                Assert.True(Cache.CacheDictionary.ContainsKey(q + "_p__linq__0=3"));
+                Assert.True(Cache.CacheDictionary.ContainsKey("EFCache.MyContext_" + q + "_p__linq__0=3"));
             }
         }
 
@@ -147,7 +147,7 @@ namespace EFCache
                 var q = ctx.Entities.Where(e => e.Id == id);
                 q.ToListAsync().GetAwaiter().GetResult();
 
-                Assert.True(Cache.CacheDictionary.ContainsKey(q + "_p__linq__0=3"));
+                Assert.True(Cache.CacheDictionary.ContainsKey("EFCache.MyContext_" + q + "_p__linq__0=3"));
             }
         }
 
@@ -317,7 +317,7 @@ namespace EFCache
         public void CUD_mapped_to_sprocs_reset_cache()
         {
             const string cachedItemKey =
-                "SELECT TOP (1) \r\n    [c].[Id] AS [Id], \r\n    [c].[Data] AS [Data]\r\n    FROM [dbo].[EntitiesMappedToSprocs] AS [c]_";
+                "EFCache.MyContext_SELECT TOP (1) \r\n    [c].[Id] AS [Id], \r\n    [c].[Data] AS [Data]\r\n    FROM [dbo].[EntitiesMappedToSprocs] AS [c]_";
 
             using (var ctx = new MyContext())
             {

@@ -392,7 +392,7 @@ namespace EFCache
             mockTransactionHandler.Verify(
                 h => h.PutItem(
                     transaction,
-                    "Query_Param1=123_Param2=abc",
+                    "db_Query_Param1=123_Param2=abc",
                     It.Is<CachedResults>(r => r.Results.Count == 1 && r.RecordsAffected == 1 && r.TableMetadata.Length == 2),
                     It.Is<IEnumerable<string>>(es => es.SequenceEqual(new [] { "ES1", "ES2"})),
                     slidingExpiration,
@@ -595,14 +595,14 @@ namespace EFCache
             object value;
 
             mockTransactionHandler.Verify(
-                h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out value), Times.Once);
+                h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
  
             mockCommand.Verify(c => c.ExecuteScalar(), Times.Once);
 
             mockTransactionHandler.Verify(
                 h => h.PutItem(
                     transaction,
-                    "Exec_P1=ZZZ_P2=123",
+                    "db_Exec_P1=ZZZ_P2=123",
                     retValue, 
                     new[] {"ES1", "ES2"}, 
                     slidingExpiration, 
@@ -630,7 +630,7 @@ namespace EFCache
 
             var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
             mockTransactionHandler
-                .Setup(h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out retValue))
+                .Setup(h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out retValue))
                 .Returns(true);
 
             var result =
@@ -644,7 +644,7 @@ namespace EFCache
 
             object value;
             mockTransactionHandler.Verify(
-                h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out value), Times.Once);
+                h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
 
             mockCommand.Verify(h => h.ExecuteScalar(), Times.Never);
 
@@ -824,6 +824,11 @@ namespace EFCache
 
         private static Mock<DbCommand> CreateMockCommand(DbParameterCollection parameterCollection = null, DbDataReader reader = null, DbTransaction transaction = null)
         {
+            var mockConnection = new Mock<DbConnection>();
+            mockConnection
+                .Setup(c => c.Database)
+                .Returns("db");
+
             var mockCommand = new Mock<DbCommand>();
             mockCommand
                 .Setup(c => c.CommandText)
@@ -833,6 +838,11 @@ namespace EFCache
                 .Protected()
                 .Setup<DbParameterCollection>("DbParameterCollection")
                 .Returns(parameterCollection ?? CreateParameterCollection(new string[0], new object[0]));
+
+            mockCommand
+                .Protected()
+                .Setup<DbConnection>("DbConnection")
+                .Returns(mockConnection.Object);
 
             if (reader != null)
             {
@@ -1098,14 +1108,14 @@ namespace EFCache
                 object value;
 
                 mockTransactionHandler.Verify(
-                    h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out value), Times.Once);
+                    h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
 
                 mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
 
                 mockTransactionHandler.Verify(
                     h => h.PutItem(
                         transaction,
-                        "Exec_P1=ZZZ_P2=123",
+                        "db_Exec_P1=ZZZ_P2=123",
                         retValue,
                         new[] {"ES1", "ES2"},
                         slidingExpiration,
@@ -1133,7 +1143,7 @@ namespace EFCache
 
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
                 mockTransactionHandler
-                    .Setup(h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out retValue))
+                    .Setup(h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out retValue))
                     .Returns(true);
 
                 var result =
@@ -1147,7 +1157,7 @@ namespace EFCache
 
                 object value;
                 mockTransactionHandler.Verify(
-                    h => h.GetItem(transaction, "Exec_P1=ZZZ_P2=123", out value), Times.Once);
+                    h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
 
                 mockCommand.Verify(h => h.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Never);
 
@@ -1363,7 +1373,7 @@ namespace EFCache
                 mockTransactionHandler.Verify(
                     h => h.PutItem(
                         transaction,
-                        "Query_Param1=123_Param2=abc",
+                        "db_Query_Param1=123_Param2=abc",
                         It.Is<CachedResults>(
                             r => r.Results.Count == 1 && r.RecordsAffected == 1 && r.TableMetadata.Length == 2),
                         It.Is<IEnumerable<string>>(es => es.SequenceEqual(new[] {"ES1", "ES2"})),
