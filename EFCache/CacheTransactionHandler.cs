@@ -8,7 +8,6 @@ namespace EFCache
     using System.Data;
     using System.Data.Common;
     using System.Data.Entity.Infrastructure.Interception;
-    using System.Diagnostics;
     using System.Linq;
 
     public class CacheTransactionHandler : IDbTransactionInterceptor

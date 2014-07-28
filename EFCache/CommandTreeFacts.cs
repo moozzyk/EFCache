@@ -82,12 +82,12 @@ namespace EFCache
         }
 
         // testing only
-        internal CommandTreeFacts(ReadOnlyCollection<EntitySetBase> affectedEntitySets, bool isQuery, bool usesNonDeterministicFunctions)
+        internal CommandTreeFacts(ReadOnlyCollection<EntitySetBase> affectedEntitySets, bool isQuery, bool usesNonDeterministicFunctions, MetadataWorkspace metadataWorkspace = null)
         {
             AffectedEntitySets = affectedEntitySets;
             IsQuery = isQuery;
             UsesNonDeterministicFunctions = usesNonDeterministicFunctions;
-            MetadataWorkspace = new MetadataWorkspace();
+            MetadataWorkspace = metadataWorkspace ?? new MetadataWorkspace();
         }
 
         public ReadOnlyCollection<EntitySetBase> AffectedEntitySets { get; private set; }

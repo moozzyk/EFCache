@@ -2,6 +2,7 @@
 
 namespace EFCache
 {
+    using System;
     using System.Data.Entity.Core.Objects;
     using System.Data.Entity.Infrastructure;
     using System.Linq;
@@ -17,6 +18,11 @@ namespace EFCache
         public static IQueryable<T> NotCached<T>(this IQueryable<T> source)
             where T : class
         {
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");    
+            }
+
             var objectQuery = TryGetObjectQuery(source) ?? source as ObjectQuery;
 
             if (objectQuery != null)
@@ -29,18 +35,24 @@ namespace EFCache
         }
 
         /// <summary>
-        /// Marks the query as cacheable.
+        /// Forces query results to be always cached. Overrides caching policy settings and blacklisted queries. 
+        /// Allows caching results for queries using functions with side effects. 
         /// </summary>
         /// <typeparam name="T">Query element type.</typeparam>
-        /// <param name="source">Query whose results won't be cached. Must not be null.</param>
+        /// <param name="source">Query whose results will always be cached. Must not be null.</param>
         public static IQueryable<T> Cached<T>(this IQueryable<T> source)
             where T : class
         {
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");
+            }
+
             var objectQuery = TryGetObjectQuery(source) ?? source as ObjectQuery;
 
             if (objectQuery != null)
             {
-                ManuallyCachedQueriesRegistrar.Instance.AddCachedQuery(
+                AlwaysCachedQueriesRegistrar.Instance.AddCachedQuery(
                     objectQuery.Context.MetadataWorkspace, objectQuery.ToTraceString());
             }
 

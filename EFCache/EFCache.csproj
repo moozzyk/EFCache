@@ -73,7 +73,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ManuallyCachedQueriesRegistrar.cs" />
+    <Compile Include="AlwaysCachedQueriesRegistrar.cs" />
     <Compile Include="BlacklistedQueriesRegistrar.cs" />
     <Compile Include="CachedResults.cs" />
     <Compile Include="CacheTransactionHandler.cs" />
@@ -92,6 +92,7 @@
     <Compile Include="InMemoryCache.cs" />
     <Compile Include="ObjectContextExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryRegistrar.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

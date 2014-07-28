@@ -207,6 +207,8 @@ namespace EFCache
                 .Setup<DbDataReader>("ExecuteDbDataReader", ItExpr.IsAny<CommandBehavior>())
                 .Returns(Mock.Of<DbDataReader>());
 
+            mockCommand.Setup(c => c.CommandText).Returns("Query");
+
             new CachingCommand(
                 mockCommand.Object,
                 new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, true),
@@ -247,6 +249,8 @@ namespace EFCache
             mockCommand
                 .Setup(c => c.ExecuteScalar())
                 .Returns(retValue);
+
+            mockCommand.Setup(c => c.CommandText).Returns("Query");
 
             Assert.Same(retValue, 
                 new CachingCommand(
@@ -397,7 +401,7 @@ namespace EFCache
                     It.Is<IEnumerable<string>>(es => es.SequenceEqual(new [] { "ES1", "ES2"})),
                     slidingExpiration,
                     absoluteExpiration),
-                Times.Once());
+                Times.Once);
         }
 
         [Fact]
@@ -432,8 +436,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTime>()),
-                    Times.Never());
+                        It.IsAny<DateTimeOffset>()),
+                    Times.Never);
             }
         }
 
@@ -469,8 +473,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTime>()),
-                    Times.Never());
+                        It.IsAny<DateTimeOffset>()),
+                    Times.Never);
             }
         }
 
@@ -515,11 +519,63 @@ namespace EFCache
                     h => h.PutItem(
                         It.IsAny<DbTransaction>(),
                         It.IsAny<string>(),
-                        It.IsAny<CachedResults>(),
+                        It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTime>()),
-                    Times.Never());
+                        It.IsAny<DateTimeOffset>()),
+                    Times.Never);
+            }
+        }
+
+        [Fact]
+        public void Results_cached_if_too_many_or_to_few_rows_if_query_exists_in_AlwaysCachedQueriesRegistrar()
+        {
+            var cacheableRowLimits = new[]
+            {
+                new { MinCacheableRows = 0, MaxCacheableRows = 4 },
+                new { MinCacheableRows = 6, MaxCacheableRows = 100 }
+            };
+
+            var metadataWorkspace = new MetadataWorkspace();
+            AlwaysCachedQueriesRegistrar.Instance.AddCachedQuery(metadataWorkspace, "Query");
+
+            foreach (var cachableRowLimit in cacheableRowLimits)
+            {
+                var mockCommand = CreateMockCommand(reader: CreateMockReader(5).Object);
+
+                var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
+
+                var minCacheableRows = cachableRowLimit.MinCacheableRows;
+                var maxCacheableRows = cachableRowLimit.MaxCacheableRows;
+
+                var mockCachingPolicy = new Mock<CachingPolicy>();
+                mockCachingPolicy
+                    .Setup(p => p.GetCacheableRows(
+                        It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
+                        out minCacheableRows, out maxCacheableRows));
+                mockCachingPolicy
+                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(),
+                                    It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
+                    .Returns(true);
+
+                var cachingCommand = new CachingCommand(
+                    mockCommand.Object,
+                    new CommandTreeFacts(
+                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false, metadataWorkspace: metadataWorkspace),
+                    mockTransactionHandler.Object,
+                    mockCachingPolicy.Object);
+
+                cachingCommand.ExecuteReader();
+
+                mockTransactionHandler.Verify(
+                    h => h.PutItem(
+                        It.IsAny<DbTransaction>(),
+                        It.IsAny<string>(),
+                        It.IsAny<object>(),
+                        It.IsAny<IEnumerable<string>>(),
+                        It.IsAny<TimeSpan>(),
+                        It.IsAny<DateTimeOffset>()),
+                    Times.Once);
             }
         }
 
@@ -655,7 +711,7 @@ namespace EFCache
                     It.IsAny<object>(),
                     It.IsAny<IEnumerable<string>>(),
                     It.IsAny<TimeSpan>(),
-                    It.IsAny<DateTime>()),
+                    It.IsAny<DateTimeOffset>()),
                     Times.Never);
         }
 
@@ -668,6 +724,8 @@ namespace EFCache
             mockCommand
                 .Setup(c => c.ExecuteScalar())
                 .Returns(retValue);
+
+            mockCommand.Setup(c => c.CommandText).Returns("Query");
 
             var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
 
@@ -692,7 +750,7 @@ namespace EFCache
                     It.IsAny<object>(),
                     It.IsAny<IEnumerable<string>>(),
                     It.IsAny<TimeSpan>(),
-                    It.IsAny<DateTime>()),
+                    It.IsAny<DateTimeOffset>()),
                     Times.Never);
         }
 
@@ -736,7 +794,7 @@ namespace EFCache
                     It.IsAny<object>(),
                     It.IsAny<IEnumerable<string>>(),
                     It.IsAny<TimeSpan>(),
-                    It.IsAny<DateTime>()),
+                    It.IsAny<DateTimeOffset>()),
                     Times.Never);
         }
 
@@ -1030,6 +1088,8 @@ namespace EFCache
                     .Setup(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()))
                     .Returns(Task.FromResult(1));
 
+                mockCommand.Setup(c => c.CommandText).Returns("Query");
+
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
 
                 var rowsAffected = new CachingCommand(
@@ -1054,6 +1114,8 @@ namespace EFCache
                 mockCommand
                     .Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()))
                     .Returns(Task.FromResult(retValue));
+
+                mockCommand.Setup(c => c.CommandText).Returns("Query");
 
                 Assert.Same(retValue,
                     new CachingCommand(
@@ -1168,7 +1230,7 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTime>()),
+                        It.IsAny<DateTimeOffset>()),
                     Times.Never);
             }
 
@@ -1181,6 +1243,8 @@ namespace EFCache
                 mockCommand
                     .Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()))
                     .Returns(Task.FromResult(retValue));
+
+                mockCommand.Setup(c => c.CommandText).Returns("Query");
 
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
 
@@ -1205,7 +1269,7 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTime>()),
+                        It.IsAny<DateTimeOffset>()),
                     Times.Never);
             }
 
@@ -1249,7 +1313,7 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTime>()),
+                        It.IsAny<DateTimeOffset>()),
                     Times.Never);
             }
 
@@ -1262,6 +1326,8 @@ namespace EFCache
                     .Setup<Task<DbDataReader>>("ExecuteDbDataReaderAsync", ItExpr.IsAny<CommandBehavior>(),
                         ItExpr.IsAny<CancellationToken>())
                     .Returns(Task.FromResult(Mock.Of<DbDataReader>()));
+
+                mockCommand.Setup(c => c.CommandText).Returns("Query");
 
                 new CachingCommand(
                     mockCommand.Object,
@@ -1379,7 +1445,7 @@ namespace EFCache
                         It.Is<IEnumerable<string>>(es => es.SequenceEqual(new[] {"ES1", "ES2"})),
                         slidingExpiration,
                         absoluteExpiration),
-                    Times.Once());
+                    Times.Once);
             }
 
             [Fact]
@@ -1414,8 +1480,8 @@ namespace EFCache
                             It.IsAny<object>(),
                             It.IsAny<IEnumerable<string>>(),
                             It.IsAny<TimeSpan>(),
-                            It.IsAny<DateTime>()),
-                        Times.Never());
+                            It.IsAny<DateTimeOffset>()),
+                        Times.Never);
                 }
             }
 
@@ -1451,8 +1517,8 @@ namespace EFCache
                             It.IsAny<object>(),
                             It.IsAny<IEnumerable<string>>(),
                             It.IsAny<TimeSpan>(),
-                            It.IsAny<DateTime>()),
-                        Times.Never());
+                            It.IsAny<DateTimeOffset>()),
+                        Times.Never);
                 }
             }
 
@@ -1497,11 +1563,11 @@ namespace EFCache
                         h => h.PutItem(
                             It.IsAny<DbTransaction>(),
                             It.IsAny<string>(),
-                            It.IsAny<CachedResults>(),
+                            It.IsAny<object>(),
                             It.IsAny<IEnumerable<string>>(),
                             It.IsAny<TimeSpan>(),
-                            It.IsAny<DateTime>()),
-                        Times.Never());
+                            It.IsAny<DateTimeOffset>()),
+                        Times.Never);
                 }
             }
 

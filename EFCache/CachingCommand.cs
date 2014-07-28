@@ -57,13 +57,12 @@ namespace EFCache
             get
             {
                 return _commandTreeFacts.IsQuery &&
+                       (IsQueryAlwaysCached ||
                        !_commandTreeFacts.UsesNonDeterministicFunctions &&
-                       (_cachingPolicy.UseManualCaching ?
-                           IsQueryManuallyCached :
-                           !IsQueryBlacklisted &&
-                           _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, CommandText,
-                               Parameters.Cast<DbParameter>()
-                                   .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value))));
+                       !IsQueryBlacklisted &&
+                       _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, CommandText,
+                           Parameters.Cast<DbParameter>()
+                               .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value))));
             }
         }
 
@@ -76,11 +75,11 @@ namespace EFCache
             }
         }
 
-        private bool IsQueryManuallyCached
+        private bool IsQueryAlwaysCached
         {
             get
             {
-                return ManuallyCachedQueriesRegistrar.Instance.IsQueryCached(
+                return AlwaysCachedQueriesRegistrar.Instance.IsQueryCached(
                     _commandTreeFacts.MetadataWorkspace, CommandText);
             }
         }
@@ -258,7 +257,7 @@ namespace EFCache
             _cachingPolicy.GetCacheableRows(_commandTreeFacts.AffectedEntitySets, out minCacheableRows,
                 out maxCachableRows);
 
-            if (queryResults.Count >= minCacheableRows && queryResults.Count <= maxCachableRows)
+            if (IsQueryAlwaysCached || (queryResults.Count >= minCacheableRows && queryResults.Count <= maxCachableRows))
             {
                 TimeSpan slidingExpiration;
                 DateTimeOffset absoluteExpiration;

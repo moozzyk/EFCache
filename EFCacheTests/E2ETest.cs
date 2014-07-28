@@ -280,7 +280,7 @@ namespace EFCache
         }
 
         [Fact]
-        public void DbQuery_not_cached_if_NotCached_used()
+        public void Query_results_not_cached_if_NotCached_used()
         {
             using (var ctx = new MyContext())
             {
@@ -288,7 +288,7 @@ namespace EFCache
                 Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
                 q.ToList();
-                Assert.False(Cache.CacheDictionary.Keys.Any(k => k.StartsWith(q.ToString())));
+                Assert.False(Cache.CacheDictionary.Keys.Any(k => k.Contains(q.ToString())));
             }
         }
 
@@ -308,8 +308,34 @@ namespace EFCache
                 BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, query);
 
-                var q = ctx.Entities.Count(e => e.Flag != null);
-                Assert.False(Cache.CacheDictionary.Keys.Any(k => k.StartsWith(query.ToString())));
+                ctx.Entities.Count(e => e.Flag != null);
+                Assert.False(Cache.CacheDictionary.Keys.Any(k => k.Contains(query.ToString())));
+            }
+        }
+
+        [Fact]
+        public void Query_results_cached_even_if_Cached_used_on_blacklisted_query()
+        {
+            using (var ctx = new MyContext())
+            {
+                var q = ctx.Entities.Where(e => e.Flag == true).NotCached().Cached();
+                Assert.True(AlwaysCachedQueriesRegistrar.Instance.IsQueryCached(
+                    ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
+                q.ToList();
+                Assert.True(Cache.CacheDictionary.Keys.Any(k => k.Contains(q.ToString())));
+            }
+        }
+
+        [Fact]
+        public void Query_results_cached_if_Cached_used_on_query_with_side_effects()
+        {
+            using (var ctx = new MyContext())
+            {
+                var q = ctx.Entities.Where(e => e.Name == Guid.NewGuid().ToString()).Cached();
+                Assert.True(AlwaysCachedQueriesRegistrar.Instance.IsQueryCached(
+                    ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
+                q.ToList();
+                Assert.True(Cache.CacheDictionary.Keys.Any(k => k.Contains(q.ToString())));
             }
         }
 
