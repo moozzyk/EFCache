@@ -36,7 +36,7 @@ namespace EFCache
 
         /// <summary>
         /// Forces query results to be always cached. Overrides caching policy settings and blacklisted queries. 
-        /// Allows caching results for queries using functions with side effects. 
+        /// Allows caching results for queries using non-deterministic functions. 
         /// </summary>
         /// <typeparam name="T">Query element type.</typeparam>
         /// <param name="source">Query whose results will always be cached. Must not be null.</param>
