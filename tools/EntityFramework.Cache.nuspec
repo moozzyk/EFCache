@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>EntityFramework.Cache</id>
-    <version>1.0.0-beta2</version>
+    <version>1.0.0</version>
     <authors>Pawel "moozzyk" Kadluczka</authors>
     <title>Second Level Cache for Entity Framework 6.1+.</title>
     <licenseUrl>https://efcache.codeplex.com/license</licenseUrl>
