@@ -65,14 +65,15 @@ namespace EFCache
 
             if (dbQuery != null)
             {
-                const BindingFlags privateFieldFlags = BindingFlags.NonPublic | BindingFlags.Instance;
+                const BindingFlags privateFieldFlags = 
+                    BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
 
                 var internalQuery =
-                    source.GetType().GetField("_internalQuery", privateFieldFlags)
+                    source.GetType().GetProperty("InternalQuery", privateFieldFlags)
                         .GetValue(source);
 
                 return
-                    (ObjectQuery)internalQuery.GetType().GetField("_objectQuery", privateFieldFlags)
+                    (ObjectQuery)internalQuery.GetType().GetProperty("ObjectQuery", privateFieldFlags)
                         .GetValue(internalQuery);
             }
 
