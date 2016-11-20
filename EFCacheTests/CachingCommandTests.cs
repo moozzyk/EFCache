@@ -1018,7 +1018,7 @@ namespace EFCache
         public class AsyncTests
         {
             [Fact]
-            public void ExecuteNonQueryAsync_invokes_ExecuteNonQueryAsync_method_on_wrapped_command()
+            public async Task ExecuteNonQueryAsync_invokes_ExecuteNonQueryAsync_method_on_wrapped_command()
             {
                 var mockCommand = new Mock<DbCommand>();
                 mockCommand
@@ -1026,17 +1026,17 @@ namespace EFCache
                     .Returns(Task.FromResult(42));
 
                 Assert.Equal(42,
-                    new CachingCommand(
+                    await new CachingCommand(
                         mockCommand.Object,
                         new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
                         new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
-                        Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync().Result);
+                        Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync());
 
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once);
             }
 
             [Fact]
-            public void ExecuteNonQueryAsync_invalidates_cache_for_given_entity_sets_if_any_affected_records()
+            public async Task ExecuteNonQueryAsync_invalidates_cache_for_given_entity_sets_if_any_affected_records()
             {
                 var transaction = Mock.Of<DbTransaction>();
                 var mockCommand = CreateMockCommand(transaction: transaction);
@@ -1046,11 +1046,11 @@ namespace EFCache
 
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
 
-                var rowsAffected = new CachingCommand(
+                var rowsAffected = await new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
                     mockTransactionHandler.Object,
-                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync().Result;
+                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync();
 
                 Assert.Equal(rowsAffected, 1);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
@@ -1059,7 +1059,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteNonQueryAsync_does_not_invalidate_cache_if_no_records_affected()
+            public async Task ExecuteNonQueryAsync_does_not_invalidate_cache_if_no_records_affected()
             {
                 var mockCommand = new Mock<DbCommand>();
                 mockCommand
@@ -1068,11 +1068,11 @@ namespace EFCache
 
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
 
-                var rowsAffected = new CachingCommand(
+                var rowsAffected = await new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
                     mockTransactionHandler.Object,
-                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync().Result;
+                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync();
 
                 Assert.Equal(rowsAffected, 0);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
@@ -1082,7 +1082,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteNonQueryAsync_does_not_invalidate_cache_if_no_entitysets_affected()
+            public async Task ExecuteNonQueryAsync_does_not_invalidate_cache_if_no_entitysets_affected()
             {
                 var mockCommand = new Mock<DbCommand>();
                 mockCommand
@@ -1093,11 +1093,11 @@ namespace EFCache
 
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
 
-                var rowsAffected = new CachingCommand(
+                var rowsAffected = await new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, true),
                     mockTransactionHandler.Object,
-                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync().Result;
+                    Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync();
 
                 Assert.Equal(rowsAffected, 1);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
@@ -1107,7 +1107,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteScalarAsync_invokes_ExecuteScalarAsync_method_on_wrapped_command()
+            public async Task ExecuteScalarAsync_invokes_ExecuteScalarAsync_method_on_wrapped_command()
             {
                 var retValue = new object();
 
@@ -1119,17 +1119,17 @@ namespace EFCache
                 mockCommand.Setup(c => c.CommandText).Returns("Query");
 
                 Assert.Same(retValue,
-                    new CachingCommand(
+                    await new CachingCommand(
                         mockCommand.Object,
                         new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, true),
                         new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
-                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync().Result);
+                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync());
 
                 mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
             }
 
             [Fact]
-            public void ExecuteScalarAsync_caches_result_for_cacheable_command()
+            public async Task ExecuteScalarAsync_caches_result_for_cacheable_command()
             {
                 var retValue = new object();
                 var transaction = Mock.Of<DbTransaction>();
@@ -1156,16 +1156,16 @@ namespace EFCache
                         It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                         out slidingExpiration, out absoluteExpiration));
                 mockCachingPolicy
-                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(),
                         It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                     .Returns(true);
 
                 var result =
-                    new CachingCommand(
+                    await new CachingCommand(
                         mockCommand.Object,
                         new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
                         mockTransactionHandler.Object,
-                        mockCachingPolicy.Object).ExecuteScalarAsync().Result;
+                        mockCachingPolicy.Object).ExecuteScalarAsync();
 
                 Assert.Same(retValue, result);
                 object value;
@@ -1187,7 +1187,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteScalarAsync_returns_cached_result_if_exists()
+            public async Task ExecuteScalarAsync_returns_cached_result_if_exists()
             {
                 var retValue = new object();
                 var transaction = Mock.Of<DbTransaction>();
@@ -1210,11 +1210,11 @@ namespace EFCache
                     .Returns(true);
 
                 var result =
-                    new CachingCommand(
+                    await new CachingCommand(
                         mockCommand.Object,
                         new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
                         mockTransactionHandler.Object,
-                        new CachingPolicy()).ExecuteScalarAsync().Result;
+                        new CachingPolicy()).ExecuteScalarAsync();
 
                 Assert.Same(retValue, result);
 
@@ -1236,7 +1236,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteScalarAsync_does_not_cache_results_for_non_cacheable_queries()
+            public async Task ExecuteScalarAsync_does_not_cache_results_for_non_cacheable_queries()
             {
                 var retValue = new object();
 
@@ -1250,11 +1250,11 @@ namespace EFCache
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
 
                 var result =
-                    new CachingCommand(
+                    await new CachingCommand(
                         mockCommand.Object,
                         new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
                         mockTransactionHandler.Object,
-                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync().Result;
+                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync();
 
                 Assert.Same(retValue, result);
                 object value;
@@ -1275,7 +1275,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteScalarAsync_does_not_cache_results_if_non_cacheable_per_CachingPolicy()
+            public async Task ExecuteScalarAsync_does_not_cache_results_if_non_cacheable_per_CachingPolicy()
             {
                 var retValue = new object();
 
@@ -1294,11 +1294,11 @@ namespace EFCache
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
 
                 var result =
-                    new CachingCommand(
+                    await new CachingCommand(
                         mockCommand.Object,
                         new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
                         mockTransactionHandler.Object,
-                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync().Result;
+                        Mock.Of<CachingPolicy>()).ExecuteScalarAsync();
 
                 Assert.Same(retValue, result);
                 object value;
@@ -1319,7 +1319,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteDbDataReaderAsync_invokes_ExecuteReaderAsync_method_on_wrapped_command()
+            public async Task ExecuteDbDataReaderAsync_invokes_ExecuteReaderAsync_method_on_wrapped_command()
             {
                 var mockCommand = new Mock<DbCommand>();
                 mockCommand
@@ -1330,12 +1330,12 @@ namespace EFCache
 
                 mockCommand.Setup(c => c.CommandText).Returns("Query");
 
-                new CachingCommand(
+                await new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, true),
                     new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
                     Mock.Of<CachingPolicy>())
-                    .ExecuteReaderAsync(CommandBehavior.SequentialAccess).GetAwaiter().GetResult();
+                    .ExecuteReaderAsync(CommandBehavior.SequentialAccess);
 
                 mockCommand
                     .Protected()
@@ -1345,7 +1345,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteDbDataReaderAsync_consumes_results_and_creates_CachingReader_if_query_cacheable()
+            public async Task ExecuteDbDataReaderAsync_consumes_results_and_creates_CachingReader_if_query_cacheable()
             {
                 var mockReader = CreateMockReader(1);
                 var mockCommand =
@@ -1357,7 +1357,7 @@ namespace EFCache
                         new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
                         new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
                         new CachingPolicy());
-                var reader = cachingCommand.ExecuteReaderAsync().Result;
+                var reader = await cachingCommand.ExecuteReaderAsync();
 
                 Assert.IsType<CachingReader>(reader);
                 mockReader
@@ -1374,7 +1374,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteDbDataReaderAsync_does_not_create_CachingReader_if_query_non_cacheable()
+            public async Task ExecuteDbDataReaderAsync_does_not_create_CachingReader_if_query_non_cacheable()
             {
                 var mockReader = CreateMockReader(1);
                 var mockCommand =
@@ -1387,7 +1387,7 @@ namespace EFCache
                         new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
                         Mock.Of<CachingPolicy>());
 
-                using (var reader = cachingCommand.ExecuteReaderAsync().Result)
+                using (var reader = await cachingCommand.ExecuteReaderAsync())
                 {
                     Assert.IsNotType<CachingReader>(reader);
                     mockReader
@@ -1397,7 +1397,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void Results_cached_for_cacheable_queries_Async()
+            public async Task Results_cached_for_cacheable_queries_Async()
             {
                 var mockReader = CreateMockReader(1);
                 var transaction = Mock.Of<DbTransaction>();
@@ -1419,7 +1419,7 @@ namespace EFCache
                         It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                         out slidingExpiration, out absoluteExpiration));
                 mockCachingPolicy
-                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                    .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(),
                         It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                     .Returns(true);
 
@@ -1435,7 +1435,7 @@ namespace EFCache
                     mockTransactionHandler.Object,
                     mockCachingPolicy.Object);
 
-                cachingCommand.ExecuteReaderAsync();
+                await cachingCommand.ExecuteReaderAsync();
 
                 mockTransactionHandler.Verify(
                     h => h.PutItem(
@@ -1450,7 +1450,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void Results_not_cached_for_non_cacheable_queries_Async()
+            public async Task Results_not_cached_for_non_cacheable_queries_Async()
             {
                 var reader = new Mock<DbDataReader>().Object;
                 var mockCommand = CreateMockCommand(reader: reader);
@@ -1464,7 +1464,7 @@ namespace EFCache
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>());
 
-                using (var r = cachingCommand.ExecuteReaderAsync().Result)
+                using (var r = await cachingCommand.ExecuteReaderAsync())
                 {
                     Assert.Same(reader, r);
 
@@ -1487,7 +1487,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void Results_not_cached_if_results_non_cacheable_per_caching_policy_Async()
+            public async Task Results_not_cached_if_results_non_cacheable_per_caching_policy_Async()
             {
                 var reader = new Mock<DbDataReader>().Object;
                 var mockCommand = CreateMockCommand(reader: reader);
@@ -1501,7 +1501,7 @@ namespace EFCache
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>());
 
-                using (var r = cachingCommand.ExecuteReaderAsync().Result)
+                using (var r = await cachingCommand.ExecuteReaderAsync())
                 {
                     Assert.Same(reader, r);
 
@@ -1524,7 +1524,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void Results_not_cached_if_too_many_or_to_few_rows_Async()
+            public async Task Results_not_cached_if_too_many_or_to_few_rows_Async()
             {
                 var cacheableRowLimits = new[]
                 {
@@ -1558,7 +1558,7 @@ namespace EFCache
                         mockTransactionHandler.Object,
                         mockCachingPolicy.Object);
 
-                    cachingCommand.ExecuteReaderAsync().GetAwaiter().GetResult();
+                    await cachingCommand.ExecuteReaderAsync();
 
                     mockTransactionHandler.Verify(
                         h => h.PutItem(
@@ -1573,7 +1573,7 @@ namespace EFCache
             }
 
             [Fact]
-            public void ExecuteReader_on_wrapped_command_not_invoked_for_cached_results_Async()
+            public async Task ExecuteReader_on_wrapped_command_not_invoked_for_cached_results_Async()
             {
                 var mockCommand = CreateMockCommand();
 
@@ -1590,7 +1590,7 @@ namespace EFCache
                     mockTransactionHandler.Object,
                     new CachingPolicy());
 
-                using (var reader = cachingCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess).Result)
+                using (var reader = await cachingCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess))
                 {
                     Assert.Equal(42, reader.RecordsAffected);
                 }
@@ -1598,7 +1598,7 @@ namespace EFCache
                 mockCommand
                     .Protected()
                     .Verify<Task<DbDataReader>>(
-                        "ExecuteDbDataReaderAsync", Times.Never(), ItExpr.IsAny<CommandBehavior>(), 
+                        "ExecuteDbDataReaderAsync", Times.Never(), ItExpr.IsAny<CommandBehavior>(),
                         ItExpr.IsAny<CancellationToken>());
             }
         }

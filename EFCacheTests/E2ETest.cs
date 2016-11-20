@@ -8,6 +8,7 @@ namespace EFCache
     using System.Data.Entity.Core.Common;
     using System.Data.Entity.Infrastructure;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Transactions;
     using Xunit;
 
@@ -22,8 +23,8 @@ namespace EFCache
 
     public class Item
     {
-        // using client generated key ensures inserting new entities with 
-        // ExecuteNonQuery(Async) instead of ExecuteDbDataReader(Async) 
+        // using client generated key ensures inserting new entities with
+        // ExecuteNonQuery(Async) instead of ExecuteDbDataReader(Async)
         public Guid Id { get; set; }
     }
 
@@ -139,13 +140,13 @@ namespace EFCache
         }
 
         [Fact]
-        public void Cached_data_returned_from_cache_Async()
+        public async Task Cached_data_returned_from_cache_Async()
         {
             using (var ctx = new MyContext())
             {
                 var id = 3;
                 var q = ctx.Entities.Where(e => e.Id == id);
-                q.ToListAsync().GetAwaiter().GetResult();
+                await q.ToListAsync();
 
                 Assert.True(Cache.CacheDictionary.ContainsKey("EFCache.MyContext_" + q + "_p__linq__0=3"));
             }
@@ -194,7 +195,7 @@ namespace EFCache
         }
 
         [Fact]
-        public void Cache_cleared_on_explicit_transaction_commit_Async()
+        public async Task Cache_cleared_on_explicit_transaction_commit_Async()
         {
             Cache.PutItem("s", new object(), new[] { "Item", "Entity" }, new TimeSpan(), new DateTime());
 
@@ -208,7 +209,7 @@ namespace EFCache
                     ctx.Entities.Add(new Entity());
                     ctx.Items.Add(new Item { Id = Guid.NewGuid() });
 
-                    var x = ctx.SaveChangesAsync().GetAwaiter().GetResult();
+                    var x = await ctx.SaveChangesAsync();
 
                     Assert.True(Cache.CacheDictionary.ContainsKey("s"));
 

@@ -7,6 +7,7 @@ namespace EFCache
     using System.Collections.Generic;
     using System.Threading;
     using Xunit;
+    using System.Threading.Tasks;
 
     public class CachingReaderTests : TestBase
     {
@@ -1087,18 +1088,18 @@ namespace EFCache
         public class AsyncTests
         {
             [Fact]
-            public void IsDBNullAsync_calls_IsDBNull()
+            public async Task IsDBNullAsync_calls_IsDBNull()
             {
                 var mockCachingReader = new Mock<CachingReader>(
                     new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
 
                 mockCachingReader.Setup(r => r.IsDBNullAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).CallBase();
-                mockCachingReader.Object.IsDBNullAsync(42).GetAwaiter().GetResult();
+                await mockCachingReader.Object.IsDBNullAsync(42);
                 mockCachingReader.Verify(r => r.IsDBNullAsync(42, It.IsAny<CancellationToken>()), Times.Once());
             }
 
             [Fact]
-            public void GetFieldValueAsync_calls_GetValue()
+            public async Task GetFieldValueAsync_calls_GetValue()
             {
                 var mockCachingReader = new Mock<CachingReader>(
                     new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
@@ -1107,12 +1108,12 @@ namespace EFCache
                 mockCachingReader.Setup(r => r.GetFieldValueAsync<int>(It.IsAny<int>(), It.IsAny<CancellationToken>())).CallBase();
                 mockCachingReader.Setup(r => r.GetValue(13)).Returns(42);
 
-                Assert.Equal(42, mockCachingReader.Object.GetFieldValueAsync<int>(13).Result);
+                Assert.Equal(42, await mockCachingReader.Object.GetFieldValueAsync<int>(13));
                 mockCachingReader.Verify(r => r.GetFieldValue<int>(13), Times.Once());
             }
 
             [Fact]
-            public void ReadAsync_calls_Read()
+            public async Task ReadAsync_calls_Read()
             {
                 var mockCachingReader = new Mock<CachingReader>(
                     new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
@@ -1120,12 +1121,12 @@ namespace EFCache
                 mockCachingReader.Setup(r => r.ReadAsync(It.IsAny<CancellationToken>())).CallBase();
                 mockCachingReader.Setup(r => r.Read()).Returns(true);
 
-                Assert.True(mockCachingReader.Object.ReadAsync().Result);
-                mockCachingReader.Verify(r => r.Read(), Times.Once());   
+                Assert.True(await mockCachingReader.Object.ReadAsync());
+                mockCachingReader.Verify(r => r.Read(), Times.Once());
             }
 
             [Fact]
-            public void MoveNextAsync_falls_back_to_MoveNext()
+            public async Task MoveNextAsync_falls_back_to_MoveNext()
             {
                 var mockCachingReader = new Mock<CachingReader>(
                     new CachedResults(new ColumnMetadata[0], new List<object[]>(), 0));
@@ -1133,7 +1134,7 @@ namespace EFCache
                 mockCachingReader.Setup(r => r.NextResultAsync(It.IsAny<CancellationToken>())).CallBase();
                 mockCachingReader.Setup(r => r.NextResult()).Returns(true);
 
-                Assert.True(mockCachingReader.Object.NextResultAsync().Result);
+                Assert.True(await mockCachingReader.Object.NextResultAsync());
                 mockCachingReader.Verify(r => r.NextResult(), Times.Once());
             }
         }
