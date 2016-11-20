@@ -261,7 +261,7 @@ namespace EFCache
         {
             // base.Dispose() will call Close()
             base.Dispose(disposing);
-            
+
             _resultRowsEnumerator.Dispose();
 
             _state = State.Disposed;

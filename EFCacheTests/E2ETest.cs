@@ -60,7 +60,7 @@ namespace EFCache
         public Configuration()
         {
             var transactionHandler = new CacheTransactionHandler(E2ETest.Cache);
-            
+
             AddInterceptor(transactionHandler);
 
             Loaded +=
@@ -71,10 +71,10 @@ namespace EFCache
 
     public class Cache : ICache
     {
-        public readonly Dictionary<string, object> CacheDictionary = 
+        public readonly Dictionary<string, object> CacheDictionary =
             new Dictionary<string, object>();
 
-        private readonly Dictionary<string, List<string>> _setToCacheKey 
+        private readonly Dictionary<string, List<string>> _setToCacheKey
             = new Dictionary<string, List<string>>();
 
         public bool GetItem(string key, out object value)

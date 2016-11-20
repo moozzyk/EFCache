@@ -287,13 +287,13 @@ namespace EFCache
                 .Setup<DbParameter>("CreateDbParameter")
                 .Returns(dbParam);
 
-            Assert.Same(dbParam, 
+            Assert.Same(dbParam,
                 new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(null, true, false),
                     new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
                     Mock.Of<CachingPolicy>()).CreateParameter());
-            
+
             mockCommand
                 .Protected()
                 .Verify("CreateDbParameter", Times.Once());
@@ -303,17 +303,17 @@ namespace EFCache
         public void ExecuteDbDataReader_consumes_results_and_creates_CachingReader_if_query_cacheable()
         {
             var mockReader = CreateMockReader(1);
-            var mockCommand = 
-                CreateMockCommand(reader: mockReader.Object); 
-                
-            var cachingCommand = 
+            var mockCommand =
+                CreateMockCommand(reader: mockReader.Object);
+
+            var cachingCommand =
                 new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(new List<EntitySetBase>().AsReadOnly(), true, false),
                     new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object,
                     new CachingPolicy());
             var reader = cachingCommand.ExecuteReader();
-            
+
             Assert.IsType<CachingReader>(reader);
             mockReader
                 .Protected()
@@ -326,7 +326,6 @@ namespace EFCache
             Assert.Equal("nvarchar", reader.GetDataTypeName(1));
             Assert.Equal(typeof(string), reader.GetFieldType(1));
             Assert.Equal("Name", reader.GetName(1));
-
         }
 
         [Fact]
@@ -334,7 +333,7 @@ namespace EFCache
         {
             var mockReader = CreateMockReader(1);
             var mockCommand =
-                CreateMockCommand(reader: mockReader.Object); 
+                CreateMockCommand(reader: mockReader.Object);
 
             var cachingCommand =
                 new CachingCommand(
@@ -950,6 +949,8 @@ namespace EFCache
             mockReader
                 .Setup(r => r.RecordsAffected)
                 .Returns(resultCount);
+            mockReader.As<IDisposable>()
+                .CallBase = true;
 
             mockReader
                 .Setup(r => r.GetValues(It.IsAny<object[]>()))
