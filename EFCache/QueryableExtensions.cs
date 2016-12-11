@@ -20,7 +20,7 @@ namespace EFCache
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");    
+                throw new ArgumentNullException("source");
             }
 
             var objectQuery = TryGetObjectQuery(source) ?? source as ObjectQuery;
@@ -35,8 +35,8 @@ namespace EFCache
         }
 
         /// <summary>
-        /// Forces query results to be always cached. Overrides caching policy settings and blacklisted queries. 
-        /// Allows caching results for queries using non-deterministic functions. 
+        /// Forces query results to be always cached. Overrides caching policy settings and blacklisted queries.
+        /// Allows caching results for queries using non-deterministic functions.
         /// </summary>
         /// <typeparam name="T">Query element type.</typeparam>
         /// <param name="source">Query whose results will always be cached. Must not be null.</param>

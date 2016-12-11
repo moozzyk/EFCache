@@ -297,12 +297,12 @@ namespace EFCache
             var transactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object;
             var cachingPolicy = Mock.Of<CachingPolicy>();
 
-            var cachingCommand = new CachingCommand(command, commandTreeFacts, transactionHandler, cachingPolicy); 
+            var cachingCommand = new CachingCommand(command, commandTreeFacts, transactionHandler, cachingPolicy);
 
             var mockProviderServices = new Mock<DbProviderServices>();
             mockProviderServices.Setup(s => s.CreateCommandDefinition(command)).Returns(mockCommandDefinition.Object);
 
-            var newCommandDefinition = 
+            var newCommandDefinition =
                 new CachingProviderServices(
                     mockProviderServices.Object, new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object)
                         .CreateCommandDefinition(cachingCommand);

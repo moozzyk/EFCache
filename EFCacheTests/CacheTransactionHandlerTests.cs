@@ -73,7 +73,7 @@ namespace EFCache
                 .PutItem(Mock.Of<DbTransaction>(), "key", new object(), new string[0], new TimeSpan(), new DateTime());
 
             mockCache.Verify(
-                c => c.PutItem(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IEnumerable<string>>(), 
+                c => c.PutItem(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IEnumerable<string>>(),
                     It.IsAny<TimeSpan>(), It.IsAny<DateTime>()), Times.Never());
         }
 

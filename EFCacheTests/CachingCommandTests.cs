@@ -386,7 +386,7 @@ namespace EFCache
             var cachingCommand = new CachingCommand(
                 mockCommand.Object,
                 new CommandTreeFacts(
-                    CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                    TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
                     mockTransactionHandler.Object,
                     mockCachingPolicy.Object);
 
@@ -414,7 +414,7 @@ namespace EFCache
             var cachingCommand = new CachingCommand(
                 mockCommand.Object,
                 new CommandTreeFacts(
-                    CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: true),
+                    TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: true),
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>());
 
@@ -451,7 +451,7 @@ namespace EFCache
             var cachingCommand = new CachingCommand(
                 mockCommand.Object,
                 new CommandTreeFacts(
-                    CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                    TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>());
 
@@ -508,7 +508,7 @@ namespace EFCache
                 var cachingCommand = new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(
-                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                        TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
                     mockTransactionHandler.Object,
                     mockCachingPolicy.Object);
 
@@ -560,7 +560,7 @@ namespace EFCache
                 var cachingCommand = new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(
-                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false, metadataWorkspace: metadataWorkspace),
+                        TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false, metadataWorkspace: metadataWorkspace),
                     mockTransactionHandler.Object,
                     mockCachingPolicy.Object);
 
@@ -635,14 +635,14 @@ namespace EFCache
                         It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                         out slidingExpiration, out absoluteExpiration));
             mockCachingPolicy
-                .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(),
                             It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                 .Returns(true);
 
             var result =
                 new CachingCommand(
                     mockCommand.Object,
-                    new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                    new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, false),
                     mockTransactionHandler.Object,
                     mockCachingPolicy.Object).ExecuteScalar();
 
@@ -651,17 +651,17 @@ namespace EFCache
 
             mockTransactionHandler.Verify(
                 h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
- 
+
             mockCommand.Verify(c => c.ExecuteScalar(), Times.Once);
 
             mockTransactionHandler.Verify(
                 h => h.PutItem(
                     transaction,
                     "db_Exec_P1=ZZZ_P2=123",
-                    retValue, 
-                    new[] {"ES1", "ES2"}, 
-                    slidingExpiration, 
-                    absoluteExpiration), 
+                    retValue,
+                    new[] {"ES1", "ES2"},
+                    slidingExpiration,
+                    absoluteExpiration),
                     Times.Once);
         }
 
@@ -691,7 +691,7 @@ namespace EFCache
             var result =
                 new CachingCommand(
                     mockCommand.Object,
-                    new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                    new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, false),
                     mockTransactionHandler.Object,
                     new CachingPolicy()).ExecuteScalar();
 
@@ -731,7 +731,7 @@ namespace EFCache
             var result =
                 new CachingCommand(
                     mockCommand.Object,
-                    new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                    new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, true),
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>()).ExecuteScalar();
 
@@ -775,7 +775,7 @@ namespace EFCache
             var result =
                 new CachingCommand(
                     mockCommand.Object,
-                    new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                    new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, false),
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>()).ExecuteScalar();
 
@@ -810,7 +810,7 @@ namespace EFCache
 
             var rowsAffected = new CachingCommand(
                 mockCommand.Object,
-                new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, true),
                 mockTransactionHandler.Object,
                 Mock.Of<CachingPolicy>()).ExecuteNonQuery();
 
@@ -832,7 +832,7 @@ namespace EFCache
 
             var rowsAffected = new CachingCommand(
                 mockCommand.Object,
-                new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, true),
                 mockTransactionHandler.Object,
                 Mock.Of<CachingPolicy>()).ExecuteNonQuery();
 
@@ -999,22 +999,6 @@ namespace EFCache
             return mockParameterCollection.Object;
         }
 
-        private static ReadOnlyCollection<EntitySetBase> CreateEntitySets(params string[] setNames)
-        {
-            var entitySets = new List<EntitySetBase>();
-
-            foreach (var setName in setNames)
-            {
-                var entityType =
-                    EntityType.Create(setName + "EntityType", "ns", DataSpace.CSpace,
-                    new string[0], new EdmMember[0], null);
-
-                entitySets.Add(EntitySet.Create(setName, "ns", null, null, entityType, null));
-            }
-
-            return entitySets.AsReadOnly();
-        }
-
         public class AsyncTests
         {
             [Fact]
@@ -1048,7 +1032,7 @@ namespace EFCache
 
                 var rowsAffected = await new CachingCommand(
                     mockCommand.Object,
-                    new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                    new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, true),
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync();
 
@@ -1070,7 +1054,7 @@ namespace EFCache
 
                 var rowsAffected = await new CachingCommand(
                     mockCommand.Object,
-                    new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                    new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, true),
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync();
 
@@ -1163,7 +1147,7 @@ namespace EFCache
                 var result =
                     await new CachingCommand(
                         mockCommand.Object,
-                        new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                        new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, false),
                         mockTransactionHandler.Object,
                         mockCachingPolicy.Object).ExecuteScalarAsync();
 
@@ -1212,7 +1196,7 @@ namespace EFCache
                 var result =
                     await new CachingCommand(
                         mockCommand.Object,
-                        new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                        new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, false),
                         mockTransactionHandler.Object,
                         new CachingPolicy()).ExecuteScalarAsync();
 
@@ -1252,7 +1236,7 @@ namespace EFCache
                 var result =
                     await new CachingCommand(
                         mockCommand.Object,
-                        new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, true),
+                        new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, true),
                         mockTransactionHandler.Object,
                         Mock.Of<CachingPolicy>()).ExecuteScalarAsync();
 
@@ -1296,7 +1280,7 @@ namespace EFCache
                 var result =
                     await new CachingCommand(
                         mockCommand.Object,
-                        new CommandTreeFacts(CreateEntitySets("ES1", "ES2"), true, false),
+                        new CommandTreeFacts(TestUtils.CreateEntitySets("ES1", "ES2"), true, false),
                         mockTransactionHandler.Object,
                         Mock.Of<CachingPolicy>()).ExecuteScalarAsync();
 
@@ -1431,7 +1415,7 @@ namespace EFCache
                 var cachingCommand = new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(
-                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                        TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
                     mockTransactionHandler.Object,
                     mockCachingPolicy.Object);
 
@@ -1460,7 +1444,7 @@ namespace EFCache
                 var cachingCommand = new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(
-                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: true),
+                        TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: true),
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>());
 
@@ -1497,7 +1481,7 @@ namespace EFCache
                 var cachingCommand = new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(
-                        CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                        TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>());
 
@@ -1547,14 +1531,14 @@ namespace EFCache
                             It.IsAny<ReadOnlyCollection<EntitySetBase>>(),
                             out minCacheableRows, out maxCacheableRows));
                     mockCachingPolicy
-                        .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(), 
+                        .Setup(p => p.CanBeCached(It.IsAny<ReadOnlyCollection<EntitySetBase>>(), It.IsAny<string>(),
                             It.IsAny<IEnumerable<KeyValuePair<string, object>>>()))
                         .Returns(true);
 
                     var cachingCommand = new CachingCommand(
                         mockCommand.Object,
                         new CommandTreeFacts(
-                            CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
+                            TestUtils.CreateEntitySets("ES1", "ES2"), isQuery: true, usesNonDeterministicFunctions: false),
                         mockTransactionHandler.Object,
                         mockCachingPolicy.Object);
 
@@ -1606,7 +1590,7 @@ namespace EFCache
         [Fact]
         public void CanBeCached_invoked_with_correct_parameters()
         {
-            var affectedEntitySets = CreateEntitySets("ES1", "ES2");
+            var affectedEntitySets = TestUtils.CreateEntitySets("ES1", "ES2");
 
             var mockCommand = new Mock<DbCommand>();
             mockCommand.Setup(c => c.ExecuteScalar()).Returns(new object());

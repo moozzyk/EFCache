@@ -46,14 +46,14 @@ namespace EFCache
                 var containerMapping =
                     commandTree.MetadataWorkspace.GetItemCollection(DataSpace.CSSpace).GetItems<EntityContainerMapping>().Single();
 
-                var entitySetMappings = 
+                var entitySetMappings =
                 containerMapping.EntitySetMappings.Where(
                     esm => esm.ModificationFunctionMappings.Any(
                         mfm => mfm.DeleteFunctionMapping.Function == edmFunction ||
                         mfm.InsertFunctionMapping.Function == edmFunction ||
                         mfm.UpdateFunctionMapping.Function == edmFunction));
 
-                AffectedEntitySets = 
+                AffectedEntitySets =
                     (from esm in entitySetMappings
                     from etm in esm.EntityTypeMappings
                     from mappingFragment in etm.Fragments.Where(f => f.StoreEntitySet != null)
