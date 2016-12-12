@@ -242,7 +242,7 @@ namespace EFCache
                     trx.Rollback();
 
                     Assert.True(Cache.CacheDictionary.ContainsKey("s"));
-                }                
+                }
             }
         }
 

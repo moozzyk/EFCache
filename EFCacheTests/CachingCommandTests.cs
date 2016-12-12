@@ -96,7 +96,7 @@ namespace EFCache
             mockCommand.Setup(c => c.CommandType)
                 .Returns(CommandType.StoredProcedure);
 
-            var cachingCommand = 
+            var cachingCommand =
                 new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(null, true, true),
@@ -120,7 +120,7 @@ namespace EFCache
                 .Setup<DbConnection>("DbConnection")
                 .Returns(connection);
 
-            var cachingCommand = 
+            var cachingCommand =
                 new CachingCommand(
                     mockCommand.Object,
                     new CommandTreeFacts(null, true, true),

@@ -15,7 +15,7 @@ namespace EFCache
     /// </summary>
     public class CachingPolicy
     {
-        private readonly HashSet<string> _cachedEntitySets;
+        private readonly HashSet<string> _cachedTables;
 
         /// <summary>
         /// Initializes a new instance of the <code>CachingPolicy</code> class that allows caching results for all queries.
@@ -30,14 +30,14 @@ namespace EFCache
         /// <param name="cachedEntitySets">
         /// Names of store entity sets (tables) for which results will be cached.
         /// </param>
-        public CachingPolicy(IEnumerable<string> cachedEntitySets)
+        public CachingPolicy(IEnumerable<string> cachedTables)
         {
-            if (cachedEntitySets == null)
+            if (cachedTables == null)
             {
-                throw new ArgumentNullException(nameof(cachedEntitySets));
+                throw new ArgumentNullException(nameof(cachedTables));
             }
 
-            _cachedEntitySets = new HashSet<string>(cachedEntitySets);
+            _cachedTables = new HashSet<string>(cachedTables.Where(t => !string.IsNullOrWhiteSpace(t)));
         }
 
         /// <summary>
@@ -52,12 +52,15 @@ namespace EFCache
         protected internal virtual bool CanBeCached(ReadOnlyCollection<EntitySetBase> affectedEntitySets, string sql,
             IEnumerable<KeyValuePair<string, object>> parameters)
         {
-            if (_cachedEntitySets == null)
+            if (_cachedTables == null)
             {
                 return true;
             }
 
-            return _cachedEntitySets.IsSupersetOf(affectedEntitySets.Select(e => e.Table ?? e.Name));
+            var affectedTables = affectedEntitySets.Select(
+                    e => (string.IsNullOrEmpty(e.Schema) ? string.Empty : $"{ e.Schema}.") + (e.Table ?? e.Name));
+
+            return _cachedTables.IsSupersetOf(affectedTables);
         }
 
         /// <summary>
