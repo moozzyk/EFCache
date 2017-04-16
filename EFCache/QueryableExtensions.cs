@@ -70,11 +70,11 @@ namespace EFCache
 
                 var internalQuery =
                     source.GetType().GetProperty("InternalQuery", privateFieldFlags)
-                        .GetValue(source);
+                        .GetValue(source, null);
 
                 return
                     (ObjectQuery)internalQuery.GetType().GetProperty("ObjectQuery", privateFieldFlags)
-                        .GetValue(internalQuery);
+                        .GetValue(internalQuery, null);
             }
 
             return null;
