@@ -5,11 +5,8 @@
     <version>1.1.0</version>
     <authors>Pawel "moozzyk" Kadluczka</authors>
     <title>Second Level Cache for Entity Framework 6.1+.</title>
-    <licenseUrl>https://efcache.codeplex.com/license</licenseUrl>
-    <projectUrl>https://efcache.codeplex.com</projectUrl>
-    <!--
-    <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?....</iconUrl>
-    -->
+    <licenseUrl>https://github.com/moozzyk/EFCache/blob/84d7862bff8d43d495a93560dbee5ac0380ed0fe/License.txt</licenseUrl>
+    <projectUrl>https://github.com/moozzyk/EFCache</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Second Level Cache for Entity Framework 6.1 and newer.</description>
     <summary>Second Level Cache for Entity Framework 6.1 and newer.</summary>
