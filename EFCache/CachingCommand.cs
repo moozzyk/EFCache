@@ -12,7 +12,7 @@ namespace EFCache
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class CachingCommand : DbCommand
+    internal class CachingCommand : DbCommand, ICloneable
     {
         private readonly DbCommand _command;
         private readonly CommandTreeFacts _commandTreeFacts;
@@ -421,6 +421,18 @@ namespace EFCache
                     "_",
                     Parameters.Cast<DbParameter>()
                     .Select(p => string.Format("{0}={1}", p.ParameterName, p.Value))));
+        }
+
+        public object Clone()
+        {
+            var cloneableCommand = _command as ICloneable;
+            if (cloneableCommand == null)
+            {
+                throw new InvalidOperationException("The underlying DbCommand does not implement the ICloneable interface.");
+            }
+
+            var clonedCommand = (DbCommand)cloneableCommand.Clone();
+            return new CachingCommand(clonedCommand, _commandTreeFacts, _cacheTransactionHandler, _cachingPolicy);
         }
     }
 }

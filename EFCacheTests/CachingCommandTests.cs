@@ -1612,5 +1612,40 @@ namespace EFCache
                     p => p.SequenceEqual(new Dictionary<string, object> { { "P1", "ZZZ" }, { "P2", 123 } }))), 
                     Times.Once);
         }
+
+        [Fact]
+        public void CachingCommand_can_be_cloned()
+        {
+            var mockCommand = new Mock<DbCommand>();
+            var clonedWrappedCommand = Mock.Of<DbCommand>();
+            mockCommand.As<ICloneable>().Setup(c => c.Clone()).Returns(clonedWrappedCommand);
+
+            var command = mockCommand.Object;
+            var commandTreeFacts = new CommandTreeFacts(null, true, true);
+            var transactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object;
+            var cachingPolicy = Mock.Of<CachingPolicy>();
+
+            var cachingCommand = new CachingCommand(command, commandTreeFacts, transactionHandler, cachingPolicy);
+
+            var clonedCommand = Assert.IsType<CachingCommand>(cachingCommand.Clone());
+            Assert.Same(clonedWrappedCommand, clonedCommand.WrappedCommand);
+            Assert.Same(cachingCommand.CommandTreeFacts, clonedCommand.CommandTreeFacts);
+            Assert.Same(cachingCommand.CacheTransactionHandler, clonedCommand.CacheTransactionHandler);
+            Assert.Same(cachingCommand.CachingPolicy, clonedCommand.CachingPolicy);
+        }
+
+        [Fact]
+        public void CachingCommand_throws_if_underlying_command_cannot_be_cloned()
+        {
+            var command = Mock.Of<DbCommand>();
+            var commandTreeFacts = new CommandTreeFacts(null, true, true);
+            var transactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>()).Object;
+            var cachingPolicy = Mock.Of<CachingPolicy>();
+
+            var cachingCommand = new CachingCommand(command, commandTreeFacts, transactionHandler, cachingPolicy);
+
+            var exception = Assert.Throws<InvalidOperationException>(() => cachingCommand.Clone());
+            Assert.Equal("The underlying DbCommand does not implement the ICloneable interface.", exception.Message);
+        }
     }
 }
