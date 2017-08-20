@@ -9,7 +9,7 @@ namespace EFCache
     using System.Data.Entity.Core.Metadata.Edm;
     using Xunit;
 
-    public class CachingCommandDefintionTests : TestBase
+    public class CachingCommandDefintionTests
     {
         [Fact]
         public void Ctor_sets_parameters()

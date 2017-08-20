@@ -5,7 +5,6 @@ namespace EFCache
     using System;
     using System.Collections.Generic;
     using System.Data.Entity;
-    using System.Data.Entity.Core.Common;
     using System.Data.Entity.Infrastructure;
     using System.Linq;
     using System.Threading.Tasks;
@@ -56,6 +55,7 @@ namespace EFCache
         }
     }
 
+    /*
     public class Configuration : DbConfiguration
     {
         public Configuration()
@@ -68,7 +68,7 @@ namespace EFCache
                 (sender, args) => args.ReplaceService<DbProviderServices>(
                     (s, _) => new CachingProviderServices(s, transactionHandler));
         }
-    }
+    }*/
 
     public class Cache : ICache
     {
@@ -123,9 +123,14 @@ namespace EFCache
         }
     }
 
-    public class E2ETest : TestBase
+    public class E2ETest
     {
         internal static readonly Cache Cache = new Cache();
+
+        static E2ETest()
+        {
+            EntityFrameworkCache.Initialize(E2ETest.Cache);
+        }
 
         [Fact]
         public void Cached_data_returned_from_cache()

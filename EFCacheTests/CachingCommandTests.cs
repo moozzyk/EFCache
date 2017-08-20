@@ -17,7 +17,7 @@ namespace EFCache
     using System.Threading.Tasks;
     using Xunit;
 
-    public class CachingCommandTests : TestBase
+    public class CachingCommandTests
     {
         [Fact]
         public void CachingCommand_initialized_correctly()

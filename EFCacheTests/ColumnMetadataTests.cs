@@ -4,7 +4,7 @@ namespace EFCache
 {
     using Xunit;
 
-    public class ColumnMetadataTests : TestBase
+    public class ColumnMetadataTests
     {
         [Fact]
         public void Ctor_sets_properties()

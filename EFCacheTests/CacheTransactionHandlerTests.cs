@@ -9,7 +9,7 @@ namespace EFCache
     using System.Data.Entity.Infrastructure.Interception;
     using Xunit;
 
-    public class CacheTransactionHandlerTests : TestBase
+    public class CacheTransactionHandlerTests
     {
         [Fact]
         public void CacheTransactionHandler_cannot_be_initialized_with_null_cache()

@@ -5,7 +5,7 @@ namespace EFCache
     using System.Collections.Generic;
     using Xunit;
 
-    public class CachedResultsTests : TestBase
+    public class CachedResultsTests
     {
         [Fact]
         public void CachedResults_properties_set_correctly()

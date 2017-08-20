@@ -85,6 +85,7 @@
     <Compile Include="CachingReader.cs" />
     <Compile Include="CachingPolicy.cs" />
     <Compile Include="DbContextExtensions.cs" />
+    <Compile Include="EntityFrameworkCache.cs" />
     <Compile Include="QueryableExtensions.cs" />
     <Compile Include="ICache.cs" />
     <Compile Include="ColumnMetadata.cs" />

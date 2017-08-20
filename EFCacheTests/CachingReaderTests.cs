@@ -9,7 +9,7 @@ namespace EFCache
     using Xunit;
     using System.Threading.Tasks;
 
-    public class CachingReaderTests : TestBase
+    public class CachingReaderTests
     {
         #region Close
 

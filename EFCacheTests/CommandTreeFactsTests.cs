@@ -9,7 +9,7 @@ namespace EFCache
     using System.Linq;
     using Xunit;
 
-    public class CommandTreeFactsTests : TestBase
+    public class CommandTreeFactsTests
     {
         [Fact]
         public void IsQuery_true_for_DbQueryCommandTree()

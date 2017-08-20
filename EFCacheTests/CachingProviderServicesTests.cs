@@ -16,7 +16,7 @@ namespace EFCache
     using System.Xml.Linq;
     using Xunit;
 
-    public class CachingProviderServicesTests : TestBase
+    public class CachingProviderServicesTests
     {
         [Fact]
         public void CreateDbCommandDefinition_invokes_CreateCommandDefinition_on_wrapped_provider()
