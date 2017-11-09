@@ -160,6 +160,8 @@ namespace EFCache
             get { return _cache.Count; }
         }
 
+        public ICacheQuery CacheQuery => new InMemoryCacheQuery();
+
         private static bool EntryExpired(CacheEntry entry, DateTimeOffset now)
         {
             return entry.AbsoluteExpiration < now || (now - entry.LastAccess) > entry.SlidingExpiration;
