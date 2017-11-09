@@ -78,6 +78,8 @@ namespace EFCache
         private readonly Dictionary<string, List<string>> _setToCacheKey
             = new Dictionary<string, List<string>>();
 
+        public ICacheQuery CacheQuery => new InMemoryCacheQuery();
+
         public bool GetItem(string key, out object value)
         {
             return CacheDictionary.TryGetValue(key, out value);

@@ -12,18 +12,13 @@ namespace EFCache
 
     public class CacheTransactionHandler : IDbTransactionInterceptor
     {
-        private readonly ConcurrentDictionary<DbTransaction, List<string>> _affectedSetsInTransaction 
+        private readonly ConcurrentDictionary<DbTransaction, List<string>> _affectedSetsInTransaction
             = new ConcurrentDictionary<DbTransaction, List<string>>();
-        private readonly ICache _cache;
 
-        public CacheTransactionHandler(ICache cache)
+        private ICache _cache => CacheConfiguration.Instance;
+
+        public CacheTransactionHandler()
         {
-            if (cache == null)
-            {
-                throw new ArgumentNullException("cache");
-            }
-
-            _cache = cache;
         }
 
         public virtual bool GetItem(DbTransaction transaction, string key, out object value)

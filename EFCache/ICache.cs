@@ -41,5 +41,8 @@ namespace EFCache
         /// </summary>
         /// <param name="key">The cache key.</param>
         void InvalidateItem(string key);
+
+
+        ICacheQuery CacheQuery { get; }
     }
 }

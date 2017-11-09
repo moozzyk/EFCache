@@ -75,6 +75,7 @@
   <ItemGroup>
     <Compile Include="AlwaysCachedQueriesRegistrar.cs" />
     <Compile Include="BlacklistedQueriesRegistrar.cs" />
+    <Compile Include="CacheConfiguration.cs" />
     <Compile Include="CachedResults.cs" />
     <Compile Include="CacheTransactionHandler.cs" />
     <Compile Include="CachingCommand.cs">
@@ -86,6 +87,8 @@
     <Compile Include="CachingPolicy.cs" />
     <Compile Include="DbContextExtensions.cs" />
     <Compile Include="EntityFrameworkCache.cs" />
+    <Compile Include="ICacheQuery.cs" />
+    <Compile Include="InMemoryCacheQuery.cs" />
     <Compile Include="QueryableExtensions.cs" />
     <Compile Include="ICache.cs" />
     <Compile Include="ColumnMetadata.cs" />

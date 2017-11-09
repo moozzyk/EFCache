@@ -12,7 +12,9 @@ namespace EFCache
 
         public static void Initialize(ICache cache, CachingPolicy cachingPolicy)
         {
-            var transactionHandler = new CacheTransactionHandler(cache);
+            CacheConfiguration.ReplaceCache(cache);
+
+            var transactionHandler = new CacheTransactionHandler();
 
             DbConfiguration.Loaded +=
                 (sender, args) => args.ReplaceService<DbProviderServices>(

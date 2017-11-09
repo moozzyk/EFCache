@@ -8,7 +8,7 @@ namespace EFCache
     {
         public static readonly AlwaysCachedQueriesRegistrar Instance = new AlwaysCachedQueriesRegistrar();
 
-        private readonly QueryRegistrar _cachedQueries = new QueryRegistrar();
+        private ICacheQuery _cachedQueries => CacheConfiguration.Instance.CacheQuery;
 
         private AlwaysCachedQueriesRegistrar()
         {

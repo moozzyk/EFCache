@@ -8,7 +8,7 @@ namespace EFCache
     {
         public static readonly BlacklistedQueriesRegistrar Instance = new BlacklistedQueriesRegistrar();
 
-        private readonly QueryRegistrar _blacklistedQueries = new QueryRegistrar();
+        private ICacheQuery _blacklistedQueries => CacheConfiguration.Instance.CacheQuery;
 
         private BlacklistedQueriesRegistrar()
         {
