@@ -1,4 +1,4 @@
-﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
 namespace EFCache
 {
@@ -179,7 +179,7 @@ namespace EFCache
 
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name));
+                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), Connection.Database);
                 }
 
                 return result;
@@ -188,7 +188,7 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
-            if (_cacheTransactionHandler.GetItem(Transaction, key, out value))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection.Database))
             {
                 return new CachingReader((CachedResults)value);
             }
@@ -209,6 +209,7 @@ namespace EFCache
         }
 
 #if !NET40
+
         protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
         {
             if (!IsCacheable)
@@ -217,7 +218,7 @@ namespace EFCache
 
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name));
+                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), Connection.Database);
                 }
 
                 return result;
@@ -226,7 +227,7 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
-            if (_cacheTransactionHandler.GetItem(Transaction, key, out value))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection.Database))
             {
                 return new CachingReader((CachedResults)value);
             }
@@ -245,6 +246,7 @@ namespace EFCache
                 return HandleCaching(reader, key, queryResults);
             }
         }
+
 #endif
 
         private DbDataReader HandleCaching(DbDataReader reader, string key, List<object[]> queryResults)
@@ -270,7 +272,8 @@ namespace EFCache
                     cachedResults,
                     _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                     slidingExpiration,
-                    absoluteExpiration);
+                    absoluteExpiration,
+                    Connection.Database);
             }
 
             return new CachingReader(cachedResults);
@@ -301,27 +304,29 @@ namespace EFCache
         {
             var recordsAffected = _command.ExecuteNonQuery();
 
-            InvalidateSetsForNonQuery(recordsAffected);
+            InvalidateSetsForNonQuery(recordsAffected, Connection.Database);
 
             return recordsAffected;
         }
 
 #if !NET40
+
         public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
         {
             var recordsAffected = await _command.ExecuteNonQueryAsync(cancellationToken);
 
-            InvalidateSetsForNonQuery(recordsAffected);
+            InvalidateSetsForNonQuery(recordsAffected, Connection.Database);
 
             return recordsAffected;
         }
+
 #endif
 
-        private void InvalidateSetsForNonQuery(int recordsAffected)
+        private void InvalidateSetsForNonQuery(int recordsAffected, string backingDatabaseName = null)
         {
             if (recordsAffected > 0 && _commandTreeFacts.AffectedEntitySets.Any())
             {
-                _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name));
+                _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), backingDatabaseName);
             }
         }
 
@@ -336,7 +341,7 @@ namespace EFCache
 
             object value;
 
-            if (_cacheTransactionHandler.GetItem(Transaction, key, out value))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection.Database))
             {
                 return value;
             }
@@ -353,12 +358,14 @@ namespace EFCache
                 value,
                 _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                 slidingExpiration,
-                absoluteExpiration);
+                absoluteExpiration,
+                Connection.Database);
 
             return value;
         }
 
 #if !NET40
+
         public async override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
         {
             if (!IsCacheable)
@@ -370,7 +377,7 @@ namespace EFCache
 
             object value;
 
-            if (_cacheTransactionHandler.GetItem(Transaction, key, out value))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection.Database))
             {
                 return value;
             }
@@ -387,10 +394,12 @@ namespace EFCache
                 value,
                 _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                 slidingExpiration,
-                absoluteExpiration);
+                absoluteExpiration,
+                Connection.Database);
 
             return value;
         }
+
 #endif
 
         public override void Prepare()
