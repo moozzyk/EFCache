@@ -5,13 +5,14 @@ namespace EFCache
     using System;
     using System.Linq;
     using System.Collections.Generic;
+    using System.Data.Common;
 
     public class InMemoryCache : ICache
     {
         private readonly Dictionary<string, CacheEntry> _cache = new Dictionary<string, CacheEntry>();
         private readonly Dictionary<string, HashSet<string>> _entitySetToKey = new Dictionary<string, HashSet<string>>();
 
-        public bool GetItem(string key, out object value, string backingDatabaseName)
+        public bool GetItem(string key, out object value, DbConnection backingConnection = null)
         {
             if (key == null)
             {
@@ -29,7 +30,7 @@ namespace EFCache
                 {
                     if (EntryExpired(entry, now))
                     {
-                        InvalidateItem(key, backingDatabaseName);
+                        InvalidateItem(key, backingConnection);
                     }
                     else
                     {
@@ -43,7 +44,7 @@ namespace EFCache
             return false;
         }
 
-        public void PutItem(string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration, DateTimeOffset absoluteExpiration, string backingDatabaseName)
+        public void PutItem(string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration, DateTimeOffset absoluteExpiration, DbConnection backingConnection = null)
         {
             if (key == null)
             {
@@ -76,7 +77,7 @@ namespace EFCache
             }
         }
 
-        public void InvalidateSets(IEnumerable<string> entitySets, string backingDatabaseName)
+        public void InvalidateSets(IEnumerable<string> entitySets, DbConnection backingConnection = null)
         {
             if (entitySets == null)
             {
@@ -101,12 +102,12 @@ namespace EFCache
 
                 foreach (var key in itemsToInvalidate)
                 {
-                    InvalidateItem(key, backingDatabaseName);
+                    InvalidateItem(key, backingConnection);
                 }
             }
         }
 
-        public void InvalidateItem(string key, string backingDatabaseName)
+        public void InvalidateItem(string key, DbConnection backingConnection = null)
         {
             if (key == null)
             {
@@ -133,7 +134,7 @@ namespace EFCache
             }
         }
 
-        public void Purge(string databaseName)
+        public void Purge()
         {
             lock (_cache)
             {
@@ -150,7 +151,7 @@ namespace EFCache
 
                 foreach (var key in itemsToRemove)
                 {
-                    InvalidateItem(key, databaseName);
+                    InvalidateItem(key);
                 }
             }
         }

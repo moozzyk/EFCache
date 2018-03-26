@@ -179,7 +179,7 @@ namespace EFCache
 
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), Connection.Database);
+                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), Connection);
                 }
 
                 return result;
@@ -188,7 +188,7 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
-            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection.Database))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection))
             {
                 return new CachingReader((CachedResults)value);
             }
@@ -218,7 +218,7 @@ namespace EFCache
 
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), Connection.Database);
+                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), Connection);
                 }
 
                 return result;
@@ -227,7 +227,7 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
-            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection.Database))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection))
             {
                 return new CachingReader((CachedResults)value);
             }
@@ -273,7 +273,7 @@ namespace EFCache
                     _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                     slidingExpiration,
                     absoluteExpiration,
-                    Connection.Database);
+                    Connection);
             }
 
             return new CachingReader(cachedResults);
@@ -304,7 +304,7 @@ namespace EFCache
         {
             var recordsAffected = _command.ExecuteNonQuery();
 
-            InvalidateSetsForNonQuery(recordsAffected, Connection.Database);
+            InvalidateSetsForNonQuery(recordsAffected, Connection);
 
             return recordsAffected;
         }
@@ -315,18 +315,18 @@ namespace EFCache
         {
             var recordsAffected = await _command.ExecuteNonQueryAsync(cancellationToken);
 
-            InvalidateSetsForNonQuery(recordsAffected, Connection.Database);
+            InvalidateSetsForNonQuery(recordsAffected, Connection);
 
             return recordsAffected;
         }
 
 #endif
 
-        private void InvalidateSetsForNonQuery(int recordsAffected, string backingDatabaseName = null)
+        private void InvalidateSetsForNonQuery(int recordsAffected, DbConnection backingConnectionName = null)
         {
             if (recordsAffected > 0 && _commandTreeFacts.AffectedEntitySets.Any())
             {
-                _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), backingDatabaseName);
+                _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), backingConnectionName);
             }
         }
 
@@ -341,7 +341,7 @@ namespace EFCache
 
             object value;
 
-            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection.Database))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection))
             {
                 return value;
             }
@@ -359,7 +359,7 @@ namespace EFCache
                 _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                 slidingExpiration,
                 absoluteExpiration,
-                Connection.Database);
+                Connection);
 
             return value;
         }
@@ -377,7 +377,7 @@ namespace EFCache
 
             object value;
 
-            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection.Database))
+            if (_cacheTransactionHandler.GetItem(Transaction, key, out value, Connection))
             {
                 return value;
             }
@@ -395,7 +395,7 @@ namespace EFCache
                 _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                 slidingExpiration,
                 absoluteExpiration,
-                Connection.Database);
+                Connection);
 
             return value;
         }

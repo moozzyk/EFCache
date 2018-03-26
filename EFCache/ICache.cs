@@ -19,9 +19,9 @@ namespace EFCache
         /// </summary>
         /// <param name="key">The cache key.</param>
         /// <param name="value">The retrieved value.</param>
-        /// <param name="backingDatabaseName">The database to be cached against</param>
+        /// <param name="backingConnection">The database to be cached against</param>
         /// <returns>A value of <c>true</c> if entry was found in the cache, <c>false</c> otherwise.</returns>
-        bool GetItem(string key, out object value, string backingDatabaseName = null);
+        bool GetItem(string key, out object value, DbConnection backingConnection = null);
 
         /// <summary>
         /// Adds the specified entry to the cache.
@@ -31,21 +31,21 @@ namespace EFCache
         /// <param name="dependentEntitySets">The list of dependent entity sets.</param>
         /// <param name="slidingExpiration">The sliding expiration.</param>
         /// <param name="absoluteExpiration">The absolute expiration.</param>
-        /// <param name="backingDatabaseName">The database to be cached against</param>
-        void PutItem(string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration, DateTimeOffset absoluteExpiration, string backingDatabaseName = null);
+        /// <param name="backingConnection">The database to be cached against</param>
+        void PutItem(string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration, DateTimeOffset absoluteExpiration, DbConnection backingConnection = null);
 
         /// <summary>
         /// Invalidates all cache entries which are dependent on any of the specified entity sets.
         /// </summary>
         /// <param name="entitySets">The entity sets.</param>
-        /// <param name="backingDatabaseName">The database to be cached against</param>
-        void InvalidateSets(IEnumerable<string> entitySets, string backingDatabaseName = null);
+        /// <param name="backingConnection">The database to be cached against</param>
+        void InvalidateSets(IEnumerable<string> entitySets, DbConnection backingConnection = null);
 
         /// <summary>
         /// Invalidates cache entry with a given key.
         /// </summary>
         /// <param name="key">The cache key.</param>
-        /// <param name="backingDatabaseName">The database to be cached against</param>
-        void InvalidateItem(string key, string backingDatabaseName = null);
+        /// <param name="backingConnection">The database to be cached against</param>
+        void InvalidateItem(string key, DbConnection backingConnection = null);
     }
 }
