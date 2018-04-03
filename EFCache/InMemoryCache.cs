@@ -133,7 +133,7 @@ namespace EFCache
             }
         }
 
-        public void Purge()
+        public void Purge(bool removeUnexpiredItems = false)
         {
             lock (_cache)
             {
@@ -142,7 +142,7 @@ namespace EFCache
 
                 foreach (var item in _cache)
                 {
-                    if (EntryExpired(item.Value, now))
+                    if (removeUnexpiredItems || EntryExpired(item.Value, now))
                     {
                         itemsToRemove.Add(item.Key);
                     }
