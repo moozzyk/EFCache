@@ -133,7 +133,12 @@ namespace EFCache
             }
         }
 
-        public void Purge(bool removeUnexpiredItems = false)
+        public void Purge()
+        {
+            Purge(false);
+        }
+
+        public void Purge(bool removeUnexpiredItems)
         {
             lock (_cache)
             {
