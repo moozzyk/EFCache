@@ -72,9 +72,7 @@
     <Compile Include="BlacklistedQueriesRegistrar.cs" />
     <Compile Include="CachedResults.cs" />
     <Compile Include="CacheTransactionHandler.cs" />
-    <Compile Include="CachingCommand.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="CachingCommand.cs" />
     <Compile Include="CachingCommandDefinition.cs" />
     <Compile Include="CachingProviderServices.cs" />
     <Compile Include="CachingReader.cs" />

@@ -322,11 +322,11 @@ namespace EFCache
 
 #endif
 
-        private void InvalidateSetsForNonQuery(int recordsAffected, DbConnection backingConnectionName = null)
+        private void InvalidateSetsForNonQuery(int recordsAffected, DbConnection backingConnection = null)
         {
             if (recordsAffected > 0 && _commandTreeFacts.AffectedEntitySets.Any())
             {
-                _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), backingConnectionName);
+                _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), backingConnection);
             }
         }
 
