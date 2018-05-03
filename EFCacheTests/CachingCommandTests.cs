@@ -1,4 +1,4 @@
-﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
 namespace EFCache
 {
@@ -399,7 +399,8 @@ namespace EFCache
                     It.Is<CachedResults>(r => r.Results.Count == 1 && r.RecordsAffected == 1 && r.TableMetadata.Length == 2),
                     It.Is<IEnumerable<string>>(es => es.SequenceEqual(new [] { "ES1", "ES2"})),
                     slidingExpiration,
-                    absoluteExpiration),
+                    absoluteExpiration,
+					It.IsAny<DbConnection>()),
                 Times.Once);
         }
 
@@ -425,7 +426,8 @@ namespace EFCache
                 object value;
 
                 mockTransactionHandler.Verify(
-                    c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value),
+                    c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+						It.IsAny<DbConnection>()),
                     Times.Never());
 
                 mockTransactionHandler.Verify(
@@ -435,7 +437,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTimeOffset>()),
+                        It.IsAny<DateTimeOffset>(),
+						It.IsAny<DbConnection>()),
                     Times.Never);
             }
         }
@@ -462,7 +465,8 @@ namespace EFCache
                 object value;
 
                 mockTransactionHandler.Verify(
-                    c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value),
+                    c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+						It.IsAny<DbConnection>()),
                     Times.Never());
 
                 mockTransactionHandler.Verify(
@@ -472,7 +476,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTimeOffset>()),
+                        It.IsAny<DateTimeOffset>(),
+						It.IsAny<DbConnection>()),
                     Times.Never);
             }
         }
@@ -521,7 +526,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTimeOffset>()),
+                        It.IsAny<DateTimeOffset>(),
+						It.IsAny<DbConnection>()),
                     Times.Never);
             }
         }
@@ -573,7 +579,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTimeOffset>()),
+                        It.IsAny<DateTimeOffset>(),
+						It.IsAny<DbConnection>()),
                     Times.Once);
             }
         }
@@ -587,7 +594,8 @@ namespace EFCache
 
             var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
             mockTransactionHandler
-                .Setup(h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value))
+                .Setup(h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+					It.IsAny<DbConnection>()))
                 .Returns(true);
 
             var cachingCommand = new CachingCommand(
@@ -650,7 +658,8 @@ namespace EFCache
             object value;
 
             mockTransactionHandler.Verify(
-                h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
+                h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value,
+					It.IsAny<DbConnection>()), Times.Once);
 
             mockCommand.Verify(c => c.ExecuteScalar(), Times.Once);
 
@@ -661,7 +670,8 @@ namespace EFCache
                     retValue,
                     new[] {"ES1", "ES2"},
                     slidingExpiration,
-                    absoluteExpiration),
+                    absoluteExpiration,
+					It.IsAny<DbConnection>()),
                     Times.Once);
         }
 
@@ -685,7 +695,8 @@ namespace EFCache
 
             var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
             mockTransactionHandler
-                .Setup(h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out retValue))
+                .Setup(h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out retValue,
+					It.IsAny<DbConnection>()))
                 .Returns(true);
 
             var result =
@@ -699,7 +710,8 @@ namespace EFCache
 
             object value;
             mockTransactionHandler.Verify(
-                h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
+                h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value,
+					It.IsAny<DbConnection>()), Times.Once);
 
             mockCommand.Verify(h => h.ExecuteScalar(), Times.Never);
 
@@ -710,7 +722,8 @@ namespace EFCache
                     It.IsAny<object>(),
                     It.IsAny<IEnumerable<string>>(),
                     It.IsAny<TimeSpan>(),
-                    It.IsAny<DateTimeOffset>()),
+                    It.IsAny<DateTimeOffset>(),
+					It.IsAny<DbConnection>()),
                     Times.Never);
         }
 
@@ -738,7 +751,8 @@ namespace EFCache
             Assert.Same(retValue, result);
             object value;
             mockTransactionHandler.Verify(
-                h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value), Times.Never);
+                h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+					It.IsAny<DbConnection>()), Times.Never);
 
             mockCommand.Verify(c => c.ExecuteScalar(), Times.Once);
 
@@ -749,7 +763,8 @@ namespace EFCache
                     It.IsAny<object>(),
                     It.IsAny<IEnumerable<string>>(),
                     It.IsAny<TimeSpan>(),
-                    It.IsAny<DateTimeOffset>()),
+                    It.IsAny<DateTimeOffset>(),
+					It.IsAny<DbConnection>()),
                     Times.Never);
         }
 
@@ -782,7 +797,8 @@ namespace EFCache
             Assert.Same(retValue, result);
             object value;
             mockTransactionHandler.Verify(
-                h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value), Times.Never);
+                h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+					It.IsAny<DbConnection>()), Times.Never);
 
             mockCommand.Verify(c => c.ExecuteScalar(), Times.Once);
 
@@ -793,7 +809,8 @@ namespace EFCache
                     It.IsAny<object>(),
                     It.IsAny<IEnumerable<string>>(),
                     It.IsAny<TimeSpan>(),
-                    It.IsAny<DateTimeOffset>()),
+                    It.IsAny<DateTimeOffset>(),
+					It.IsAny<DbConnection>()),
                     Times.Never);
         }
 
@@ -817,7 +834,8 @@ namespace EFCache
             Assert.Equal(rowsAffected, 1);
             mockCommand.Verify(c => c.ExecuteNonQuery(), Times.Once());
             mockTransactionHandler
-                .Verify(h => h.InvalidateSets(transaction, new[] { "ES1", "ES2" }), Times.Once());
+                .Verify(h => h.InvalidateSets(transaction, new[] { "ES1", "ES2" },
+					It.IsAny<DbConnection>()), Times.Once());
         }
 
         [Fact]
@@ -839,7 +857,8 @@ namespace EFCache
             Assert.Equal(rowsAffected, 0);
             mockCommand.Verify(c => c.ExecuteNonQuery(), Times.Once());
             mockTransactionHandler
-                .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>()), Times.Never());
+                .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>(),
+					It.IsAny<DbConnection>()), Times.Never());
         }
 
         [Fact]
@@ -861,7 +880,8 @@ namespace EFCache
             Assert.Equal(rowsAffected, 1);
             mockCommand.Verify(c => c.ExecuteNonQuery(), Times.Once());
             mockTransactionHandler
-                .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>()), Times.Never());
+                .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>(),
+					It.IsAny<DbConnection>()), Times.Never());
         }
 
         [Fact]
@@ -1039,7 +1059,8 @@ namespace EFCache
                 Assert.Equal(rowsAffected, 1);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
                 mockTransactionHandler
-                    .Verify(h => h.InvalidateSets(transaction, new[] {"ES1", "ES2"}), Times.Once());
+                    .Verify(h => h.InvalidateSets(transaction, new[] {"ES1", "ES2"},
+						It.IsAny<DbConnection>()), Times.Once());
             }
 
             [Fact]
@@ -1061,7 +1082,8 @@ namespace EFCache
                 Assert.Equal(rowsAffected, 0);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
                 mockTransactionHandler
-                    .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>()),
+                    .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>(),
+							It.IsAny<DbConnection>()),
                         Times.Never());
             }
 
@@ -1086,7 +1108,8 @@ namespace EFCache
                 Assert.Equal(rowsAffected, 1);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
                 mockTransactionHandler
-                    .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>()),
+                    .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>(),
+							It.IsAny<DbConnection>()),
                         Times.Never());
             }
 
@@ -1155,7 +1178,8 @@ namespace EFCache
                 object value;
 
                 mockTransactionHandler.Verify(
-                    h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
+                    h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value,
+						It.IsAny<DbConnection>()), Times.Once);
 
                 mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
 
@@ -1166,7 +1190,8 @@ namespace EFCache
                         retValue,
                         new[] {"ES1", "ES2"},
                         slidingExpiration,
-                        absoluteExpiration),
+                        absoluteExpiration,
+						It.IsAny<DbConnection>()),
                     Times.Once);
             }
 
@@ -1190,7 +1215,8 @@ namespace EFCache
 
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
                 mockTransactionHandler
-                    .Setup(h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out retValue))
+                    .Setup(h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out retValue,
+						It.IsAny<DbConnection>()))
                     .Returns(true);
 
                 var result =
@@ -1204,7 +1230,8 @@ namespace EFCache
 
                 object value;
                 mockTransactionHandler.Verify(
-                    h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value), Times.Once);
+                    h => h.GetItem(transaction, "db_Exec_P1=ZZZ_P2=123", out value,
+						It.IsAny<DbConnection>()), Times.Once);
 
                 mockCommand.Verify(h => h.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Never);
 
@@ -1215,7 +1242,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTimeOffset>()),
+                        It.IsAny<DateTimeOffset>(),
+						It.IsAny<DbConnection>()),
                     Times.Never);
             }
 
@@ -1243,7 +1271,8 @@ namespace EFCache
                 Assert.Same(retValue, result);
                 object value;
                 mockTransactionHandler.Verify(
-                    h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value), Times.Never);
+                    h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+						It.IsAny<DbConnection>()), Times.Never);
 
                 mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
 
@@ -1254,7 +1283,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTimeOffset>()),
+                        It.IsAny<DateTimeOffset>(),
+						It.IsAny<DbConnection>()),
                     Times.Never);
             }
 
@@ -1287,7 +1317,8 @@ namespace EFCache
                 Assert.Same(retValue, result);
                 object value;
                 mockTransactionHandler.Verify(
-                    h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value), Times.Never);
+                    h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+						It.IsAny<DbConnection>()), Times.Never);
 
                 mockCommand.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
 
@@ -1298,7 +1329,8 @@ namespace EFCache
                         It.IsAny<object>(),
                         It.IsAny<IEnumerable<string>>(),
                         It.IsAny<TimeSpan>(),
-                        It.IsAny<DateTimeOffset>()),
+                        It.IsAny<DateTimeOffset>(),
+						It.IsAny<DbConnection>()),
                     Times.Never);
             }
 
@@ -1429,7 +1461,8 @@ namespace EFCache
                             r => r.Results.Count == 1 && r.RecordsAffected == 1 && r.TableMetadata.Length == 2),
                         It.Is<IEnumerable<string>>(es => es.SequenceEqual(new[] {"ES1", "ES2"})),
                         slidingExpiration,
-                        absoluteExpiration),
+                        absoluteExpiration,
+						It.IsAny<DbConnection>()),
                     Times.Once);
             }
 
@@ -1455,7 +1488,8 @@ namespace EFCache
                     object value;
 
                     mockTransactionHandler.Verify(
-                        c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value),
+                        c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+							It.IsAny<DbConnection>()),
                         Times.Never());
 
                     mockTransactionHandler.Verify(
@@ -1465,7 +1499,8 @@ namespace EFCache
                             It.IsAny<object>(),
                             It.IsAny<IEnumerable<string>>(),
                             It.IsAny<TimeSpan>(),
-                            It.IsAny<DateTimeOffset>()),
+                            It.IsAny<DateTimeOffset>(),
+							It.IsAny<DbConnection>()),
                         Times.Never);
                 }
             }
@@ -1492,7 +1527,8 @@ namespace EFCache
                     object value;
 
                     mockTransactionHandler.Verify(
-                        c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value),
+                        c => c.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+							It.IsAny<DbConnection>()),
                         Times.Never());
 
                     mockTransactionHandler.Verify(
@@ -1502,7 +1538,8 @@ namespace EFCache
                             It.IsAny<object>(),
                             It.IsAny<IEnumerable<string>>(),
                             It.IsAny<TimeSpan>(),
-                            It.IsAny<DateTimeOffset>()),
+                            It.IsAny<DateTimeOffset>(),
+							It.IsAny<DbConnection>()),
                         Times.Never);
                 }
             }
@@ -1551,7 +1588,8 @@ namespace EFCache
                             It.IsAny<object>(),
                             It.IsAny<IEnumerable<string>>(),
                             It.IsAny<TimeSpan>(),
-                            It.IsAny<DateTimeOffset>()),
+                            It.IsAny<DateTimeOffset>(),
+							It.IsAny<DbConnection>()),
                         Times.Never);
                 }
             }
@@ -1565,7 +1603,8 @@ namespace EFCache
 
                 var mockTransactionHandler = new Mock<CacheTransactionHandler>(Mock.Of<ICache>());
                 mockTransactionHandler
-                    .Setup(h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value))
+                    .Setup(h => h.GetItem(It.IsAny<DbTransaction>(), It.IsAny<string>(), out value,
+						It.IsAny<DbConnection>()))
                     .Returns(true);
 
                 var cachingCommand = new CachingCommand(
