@@ -1,4 +1,4 @@
-﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
 namespace EFCache
 {
@@ -25,12 +25,14 @@ namespace EFCache
             object value;
 
             var mockCache = new Mock<ICache>();
-            mockCache.Setup(c => c.GetItem(It.IsAny<string>(), out value)).Returns(true);
+            mockCache.Setup(c => c.GetItem(It.IsAny<string>(), out value,
+					It.IsAny<DbConnection>())).Returns(true);
 
             Assert.True(
                 new CacheTransactionHandler(mockCache.Object).GetItem(null, "key", out value));
 
-            mockCache.Verify(c => c.GetItem("key", out value), Times.Once());
+            mockCache.Verify(c => c.GetItem("key", out value,
+				It.IsAny<DbConnection>()), Times.Once());
         }
 
         [Fact]
@@ -39,12 +41,14 @@ namespace EFCache
             object value;
 
             var mockCache = new Mock<ICache>();
-            mockCache.Setup(c => c.GetItem(It.IsAny<string>(), out value)).Returns(true);
+            mockCache.Setup(c => c.GetItem(It.IsAny<string>(), out value,
+				It.IsAny<DbConnection>())).Returns(true);
 
             Assert.False(
                 new CacheTransactionHandler(mockCache.Object).GetItem(Mock.Of<DbTransaction>(), "key", out value));
 
-            mockCache.Verify(c => c.GetItem(It.IsAny<string>(), out value), Times.Never());
+            mockCache.Verify(c => c.GetItem(It.IsAny<string>(), out value,
+				It.IsAny<DbConnection>()), Times.Never());
         }
 
         [Fact]
@@ -61,7 +65,8 @@ namespace EFCache
             new CacheTransactionHandler(mockCache.Object)
                 .PutItem(null, key, value, sets, timeSpan, dateTime);
 
-            mockCache.Verify(c => c.PutItem(key, value, sets, timeSpan, dateTime), Times.Once());
+            mockCache.Verify(c => c.PutItem(key, value, sets, timeSpan, dateTime,
+				It.IsAny<DbConnection>()), Times.Once());
         }
 
         [Fact]
@@ -74,7 +79,8 @@ namespace EFCache
 
             mockCache.Verify(
                 c => c.PutItem(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IEnumerable<string>>(),
-                    It.IsAny<TimeSpan>(), It.IsAny<DateTime>()), Times.Never());
+                    It.IsAny<TimeSpan>(), It.IsAny<DateTime>(),
+					It.IsAny<DbConnection>()), Times.Never());
         }
 
         [Fact]
@@ -87,7 +93,8 @@ namespace EFCache
             new CacheTransactionHandler(mockCache.Object)
                 .InvalidateSets(null, sets);
 
-            mockCache.Verify(c => c.InvalidateSets(sets), Times.Once());
+            mockCache.Verify(c => c.InvalidateSets(sets,
+				It.IsAny<DbConnection>()), Times.Once());
         }
 
         [Fact]
@@ -102,7 +109,8 @@ namespace EFCache
 
             transactionHandler.Committed(transaction, Mock.Of<DbTransactionInterceptionContext>());
 
-            mockCache.Verify(c =>c.InvalidateSets(new[] {"ES1", "ES2", "ES3"}), Times.Once());
+            mockCache.Verify(c =>c.InvalidateSets(new[] {"ES1", "ES2", "ES3"},
+				It.IsAny<DbConnection>()), Times.Once());
         }
 
         [Fact]
@@ -118,7 +126,8 @@ namespace EFCache
             transactionHandler.RolledBack(transaction, Mock.Of<DbTransactionInterceptionContext>());
             transactionHandler.Committed(transaction, Mock.Of<DbTransactionInterceptionContext>());
 
-            mockCache.Verify(c => c.InvalidateSets(It.IsAny<IEnumerable<string>>()), Times.Never());
+            mockCache.Verify(c => c.InvalidateSets(It.IsAny<IEnumerable<string>>(),
+				It.IsAny<DbConnection>()), Times.Never());
         }
 
     }

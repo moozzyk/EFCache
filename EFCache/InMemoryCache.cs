@@ -1,17 +1,18 @@
-﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
 namespace EFCache
 {
     using System;
     using System.Linq;
     using System.Collections.Generic;
+    using System.Data.Common;
 
     public class InMemoryCache : ICache
     {
         private readonly Dictionary<string, CacheEntry> _cache = new Dictionary<string, CacheEntry>();
         private readonly Dictionary<string, HashSet<string>> _entitySetToKey = new Dictionary<string, HashSet<string>>();
 
-        public bool GetItem(string key, out object value)
+        public bool GetItem(string key, out object value, DbConnection backingConnection = null)
         {
             if (key == null)
             {
@@ -27,9 +28,9 @@ namespace EFCache
                 CacheEntry entry;
                 if (_cache.TryGetValue(key, out entry))
                 {
-                    if(EntryExpired(entry, now))
+                    if (EntryExpired(entry, now))
                     {
-                        InvalidateItem(key);
+                        InvalidateItem(key, backingConnection);
                     }
                     else
                     {
@@ -37,13 +38,13 @@ namespace EFCache
                         value = entry.Value;
                         return true;
                     }
-                }                
+                }
             }
 
             return false;
         }
 
-        public void PutItem(string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration, DateTimeOffset absoluteExpiration)
+        public void PutItem(string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration, DateTimeOffset absoluteExpiration, DbConnection backingConnection = null)
         {
             if (key == null)
             {
@@ -59,7 +60,7 @@ namespace EFCache
             {
                 var entitySets = dependentEntitySets.ToArray();
 
-                _cache[key] = new CacheEntry(value, entitySets , slidingExpiration, absoluteExpiration);
+                _cache[key] = new CacheEntry(value, entitySets, slidingExpiration, absoluteExpiration);
 
                 foreach (var entitySet in entitySets)
                 {
@@ -71,18 +72,18 @@ namespace EFCache
                         _entitySetToKey[entitySet] = keys;
                     }
 
-                    keys.Add(key);                    
+                    keys.Add(key);
                 }
             }
         }
 
-        public void InvalidateSets(IEnumerable<string> entitySets)
+        public void InvalidateSets(IEnumerable<string> entitySets, DbConnection backingConnection = null)
         {
             if (entitySets == null)
             {
                 throw new ArgumentNullException("entitySets");
             }
-            
+
             lock (_cache)
             {
                 var itemsToInvalidate = new HashSet<string>();
@@ -101,12 +102,12 @@ namespace EFCache
 
                 foreach (var key in itemsToInvalidate)
                 {
-                    InvalidateItem(key);
+                    InvalidateItem(key, backingConnection);
                 }
             }
         }
 
-        public void InvalidateItem(string key)
+        public void InvalidateItem(string key, DbConnection backingConnection = null)
         {
             if (key == null)
             {
