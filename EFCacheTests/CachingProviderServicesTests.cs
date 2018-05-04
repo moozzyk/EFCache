@@ -1,4 +1,4 @@
-﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
 namespace EFCache
 {
@@ -6,7 +6,6 @@ namespace EFCache
     using Moq.Protected;
     using System;
     using System.Data.Common;
-    using System.Data.Entity.Core.Common;
     using System.Data.Entity.Core.Common.CommandTrees;
     using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
     using System.Data.Entity.Core.Metadata.Edm;
@@ -15,6 +14,10 @@ namespace EFCache
     using System.Xml;
     using System.Xml.Linq;
     using Xunit;
+    using DbProviderServices = System.Data.Entity.Core.Common.DbProviderServices;
+    using DbProviderManifest = System.Data.Entity.Core.Common.DbProviderManifest;
+    using DbCommandDefinition = System.Data.Entity.Core.Common.DbCommandDefinition;
+
 
     public class CachingProviderServicesTests
     {

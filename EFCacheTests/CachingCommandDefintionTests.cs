@@ -1,13 +1,13 @@
-﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
 namespace EFCache
 {
     using Moq;
     using System.Collections.Generic;
     using System.Data.Common;
-    using System.Data.Entity.Core.Common;
     using System.Data.Entity.Core.Metadata.Edm;
     using Xunit;
+    using DbCommandDefinition = System.Data.Entity.Core.Common.DbCommandDefinition;
 
     public class CachingCommandDefintionTests
     {
