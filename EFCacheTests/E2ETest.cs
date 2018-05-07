@@ -78,6 +78,8 @@ namespace EFCache
         private readonly Dictionary<string, List<string>> _setToCacheKey
             = new Dictionary<string, List<string>>();
 
+        public IEnumerable<string> EntitySetsInCache => _setToCacheKey.Select(x => x.Key);
+
         public bool GetItem(string key, out object value)
         {
             return CacheDictionary.TryGetValue(key, out value);
@@ -118,6 +120,11 @@ namespace EFCache
         }
 
         public void InvalidateItem(string key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetCacheSize()
         {
             throw new NotImplementedException();
         }

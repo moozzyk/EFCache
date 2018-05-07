@@ -1,11 +1,16 @@
-﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
+﻿
+
+// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
 namespace EFCache
 {
     using System;
     using System.Linq;
     using System.Collections.Generic;
+    using System.Runtime.Serialization.Formatters.Binary;
+    using System.IO;
 
+    [Serializable]
     public class InMemoryCache : ICache
     {
         private readonly Dictionary<string, CacheEntry> _cache = new Dictionary<string, CacheEntry>();
@@ -27,7 +32,7 @@ namespace EFCache
                 CacheEntry entry;
                 if (_cache.TryGetValue(key, out entry))
                 {
-                    if(EntryExpired(entry, now))
+                    if (EntryExpired(entry, now))
                     {
                         InvalidateItem(key);
                     }
@@ -37,7 +42,7 @@ namespace EFCache
                         value = entry.Value;
                         return true;
                     }
-                }                
+                }
             }
 
             return false;
@@ -59,7 +64,7 @@ namespace EFCache
             {
                 var entitySets = dependentEntitySets.ToArray();
 
-                _cache[key] = new CacheEntry(value, entitySets , slidingExpiration, absoluteExpiration);
+                _cache[key] = new CacheEntry(value, entitySets, slidingExpiration, absoluteExpiration);
 
                 foreach (var entitySet in entitySets)
                 {
@@ -71,7 +76,7 @@ namespace EFCache
                         _entitySetToKey[entitySet] = keys;
                     }
 
-                    keys.Add(key);                    
+                    keys.Add(key);
                 }
             }
         }
@@ -82,7 +87,7 @@ namespace EFCache
             {
                 throw new ArgumentNullException("entitySets");
             }
-            
+
             lock (_cache)
             {
                 var itemsToInvalidate = new HashSet<string>();
@@ -165,11 +170,35 @@ namespace EFCache
             get { return _cache.Count; }
         }
 
+        public IEnumerable<string> EntitySetsInCache
+        {
+            get
+            {
+                return _entitySetToKey.Select(x => x.Key);
+            }
+        }
+
+        public int GetCacheSize()
+        {
+            lock (_cache)
+            {
+                var bf = new BinaryFormatter();
+                var ms = new MemoryStream();
+
+                bf.Serialize(ms, this);
+
+                var array = ms.ToArray();
+                return array.Length;
+            }
+        }
+
+
         private static bool EntryExpired(CacheEntry entry, DateTimeOffset now)
         {
             return entry.AbsoluteExpiration < now || (now - entry.LastAccess) > entry.SlidingExpiration;
         }
 
+        [Serializable]
         private class CacheEntry
         {
             private readonly object _value;

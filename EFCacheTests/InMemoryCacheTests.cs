@@ -3,6 +3,8 @@
 namespace EFCache
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using Xunit;
 
     public class InMemoryCacheTests
@@ -59,7 +61,7 @@ namespace EFCache
             cache.PutItem("3", new object(), new[] { "ES1", "ES3", "ES4" }, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
             cache.PutItem("4", new object(), new[] { "ES3", "ES4" }, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
 
-            cache.InvalidateSets(new [] {"ES1", "ES2"});
+            cache.InvalidateSets(new[] { "ES1", "ES2" });
 
             object item;
             Assert.False(cache.GetItem("1", out item));
@@ -75,7 +77,7 @@ namespace EFCache
 
             cache.PutItem("1", new object(), new[] { "ES1", "ES2" }, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
             cache.InvalidateItem("1");
-            
+
             object item;
             Assert.False(cache.GetItem("1", out item));
         }
@@ -169,6 +171,36 @@ namespace EFCache
             Assert.Equal(
                 "key",
                 Assert.Throws<ArgumentNullException>(() => new InMemoryCache().InvalidateItem(null)).ParamName);
+        }
+
+        [Fact]
+        public void GetEntitySets_returns_all_cached_entitysets()
+        {
+            var cache = new InMemoryCache();
+            var item = new object();
+
+            var entitySets = new List<string> { "table1", "table2", "table3" };
+
+            cache.PutItem("key", item, entitySets, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
+
+            var inCache = cache.EntitySetsInCache.ToList();
+
+            Assert.Equal(entitySets, inCache);
+        }
+
+        [Fact]
+        public void GetCacheSize_returns_current_size_of_object()
+        {
+            var cache = new InMemoryCache();
+            var item = new object();
+
+            var entitySets = new List<string> { "table1", "table2", "table3" };
+
+            cache.PutItem("key", item, entitySets, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
+
+            var size = cache.GetCacheSize();
+
+            Assert.True(size > 0);
         }
     }
 }

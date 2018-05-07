@@ -41,5 +41,16 @@ namespace EFCache
         /// </summary>
         /// <param name="key">The cache key.</param>
         void InvalidateItem(string key);
+
+        /// <summary>
+        /// Calculates and returns the cache size in bytes
+        /// </summary>
+        /// <returns>The cache size in bytes</returns>
+        int GetCacheSize();
+
+        /// <summary>
+        /// Returns a list of all cached entity sets
+        /// </summary>
+        IEnumerable<string> EntitySetsInCache { get; }
     }
 }
