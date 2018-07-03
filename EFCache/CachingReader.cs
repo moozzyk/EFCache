@@ -9,7 +9,7 @@ namespace EFCache
     using System.Data.Common;
     using System.Diagnostics;
 
-    internal class CachingReader : DbDataReader
+    public class CachingReader : DbDataReader
     {
         private enum State
         {
@@ -27,7 +27,7 @@ namespace EFCache
         // TODO: multiple resultsets?
         private readonly IEnumerator<object[]> _resultRowsEnumerator;
 
-        internal CachingReader(CachedResults cachedResults)
+        public CachingReader(CachedResults cachedResults)
         {
             Debug.Assert(cachedResults != null, "cachedResults is null");
 
