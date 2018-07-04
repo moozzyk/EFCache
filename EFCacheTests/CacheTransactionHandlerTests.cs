@@ -16,7 +16,7 @@ namespace EFCache
         {
             Assert.Equal(
                 "cache",
-                Assert.Throws<ArgumentNullException>(() => new CacheTransactionHandler(null)).ParamName);
+                Assert.Throws<ArgumentNullException>(() => new CacheTransactionHandler((ICache)null)).ParamName);
         }
 
         [Fact]
@@ -28,7 +28,7 @@ namespace EFCache
             mockCache.Setup(c => c.GetItem(It.IsAny<string>(), out value)).Returns(true);
 
             Assert.True(
-                new CacheTransactionHandler(mockCache.Object).GetItem(null, "key", out value));
+                new CacheTransactionHandler(mockCache.Object).GetItem(null, "key", null,  out value));
 
             mockCache.Verify(c => c.GetItem("key", out value), Times.Once());
         }
@@ -42,7 +42,7 @@ namespace EFCache
             mockCache.Setup(c => c.GetItem(It.IsAny<string>(), out value)).Returns(true);
 
             Assert.False(
-                new CacheTransactionHandler(mockCache.Object).GetItem(Mock.Of<DbTransaction>(), "key", out value));
+                new CacheTransactionHandler(mockCache.Object).GetItem(Mock.Of<DbTransaction>(), "key", null, out value));
 
             mockCache.Verify(c => c.GetItem(It.IsAny<string>(), out value), Times.Never());
         }
@@ -59,7 +59,7 @@ namespace EFCache
             var dateTime = new DateTime(1499);
 
             new CacheTransactionHandler(mockCache.Object)
-                .PutItem(null, key, value, sets, timeSpan, dateTime);
+                .PutItem(null, key, value, sets, timeSpan, dateTime, null);
 
             mockCache.Verify(c => c.PutItem(key, value, sets, timeSpan, dateTime), Times.Once());
         }
@@ -70,7 +70,7 @@ namespace EFCache
             var mockCache = new Mock<ICache>();
 
             new CacheTransactionHandler(mockCache.Object)
-                .PutItem(Mock.Of<DbTransaction>(), "key", new object(), new string[0], new TimeSpan(), new DateTime());
+                .PutItem(Mock.Of<DbTransaction>(), "key", new object(), new string[0], new TimeSpan(), new DateTime(), null);
 
             mockCache.Verify(
                 c => c.PutItem(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IEnumerable<string>>(),
@@ -85,7 +85,7 @@ namespace EFCache
             var sets = new string[0];
 
             new CacheTransactionHandler(mockCache.Object)
-                .InvalidateSets(null, sets);
+                .InvalidateSets(null, sets, null);
 
             mockCache.Verify(c => c.InvalidateSets(sets), Times.Once());
         }
@@ -97,8 +97,8 @@ namespace EFCache
             var transactionHandler = new CacheTransactionHandler(mockCache.Object);
 
             var transaction = Mock.Of<DbTransaction>();
-            transactionHandler.InvalidateSets(transaction, new[] {"ES1", "ES2"});
-            transactionHandler.InvalidateSets(transaction, new[] {"ES3", "ES2"});
+            transactionHandler.InvalidateSets(transaction, new[] {"ES1", "ES2"}, null);
+            transactionHandler.InvalidateSets(transaction, new[] {"ES3", "ES2"}, null);
 
             transactionHandler.Committed(transaction, Mock.Of<DbTransactionInterceptionContext>());
 
@@ -112,8 +112,8 @@ namespace EFCache
             var transactionHandler = new CacheTransactionHandler(mockCache.Object);
 
             var transaction = Mock.Of<DbTransaction>();
-            transactionHandler.InvalidateSets(transaction, new[] { "ES1", "ES2" });
-            transactionHandler.InvalidateSets(transaction, new[] { "ES3", "ES2" });
+            transactionHandler.InvalidateSets(transaction, new[] { "ES1", "ES2" }, null);
+            transactionHandler.InvalidateSets(transaction, new[] { "ES3", "ES2" }, null);
 
             transactionHandler.RolledBack(transaction, Mock.Of<DbTransactionInterceptionContext>());
             transactionHandler.Committed(transaction, Mock.Of<DbTransactionInterceptionContext>());
