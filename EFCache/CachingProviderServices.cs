@@ -12,9 +12,9 @@ namespace EFCache
 
     public class CachingProviderServices : DbProviderServices
     {
-        private readonly DbProviderServices _providerServices;
-        private readonly CacheTransactionHandler _cacheTransactionHandler;
-        private readonly CachingPolicy _cachingPolicy;
+        protected readonly DbProviderServices _providerServices;
+        protected readonly CacheTransactionHandler _cacheTransactionHandler;
+        protected readonly CachingPolicy _cachingPolicy;
 
         public CachingProviderServices(DbProviderServices providerServices, CacheTransactionHandler cacheTransactionHandler, CachingPolicy cachingPolicy = null)
         {

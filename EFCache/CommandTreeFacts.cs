@@ -11,7 +11,7 @@ namespace EFCache
     using System.Diagnostics;
     using System.Linq;
 
-    internal class CommandTreeFacts
+    public class CommandTreeFacts
     {
         private static readonly HashSet<string> NonDeterministicFunctions = new HashSet<string>(
             new[] {

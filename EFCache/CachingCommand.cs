@@ -12,12 +12,12 @@ namespace EFCache
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class CachingCommand : DbCommand, ICloneable
+    public class CachingCommand : DbCommand, ICloneable
     {
-        private readonly DbCommand _command;
-        private readonly CommandTreeFacts _commandTreeFacts;
-        private readonly CacheTransactionHandler _cacheTransactionHandler;
-        private readonly CachingPolicy _cachingPolicy;
+        protected readonly DbCommand _command;
+        protected readonly CommandTreeFacts _commandTreeFacts;
+        protected readonly CacheTransactionHandler _cacheTransactionHandler;
+        protected readonly CachingPolicy _cachingPolicy;
 
         public CachingCommand(DbCommand command, CommandTreeFacts commandTreeFacts, CacheTransactionHandler cacheTransactionHandler, CachingPolicy cachingPolicy)
         {
@@ -32,12 +32,12 @@ namespace EFCache
             _cachingPolicy = cachingPolicy;
         }
 
-        internal CommandTreeFacts CommandTreeFacts
+        public CommandTreeFacts CommandTreeFacts
         {
             get { return _commandTreeFacts; }
         }
 
-        internal CacheTransactionHandler CacheTransactionHandler
+        public CacheTransactionHandler CacheTransactionHandler
         {
             get { return _cacheTransactionHandler; }
         }
@@ -52,7 +52,7 @@ namespace EFCache
             get { return _command; }
         }
 
-        private bool IsCacheable
+        protected bool IsCacheable
         {
             get
             {
@@ -75,7 +75,7 @@ namespace EFCache
             }
         }
 
-        private bool IsQueryAlwaysCached
+        protected bool IsQueryAlwaysCached
         {
             get
             {
@@ -247,7 +247,7 @@ namespace EFCache
         }
 #endif
 
-        private DbDataReader HandleCaching(DbDataReader reader, string key, List<object[]> queryResults)
+        protected virtual DbDataReader HandleCaching(DbDataReader reader, string key, List<object[]> queryResults)
         {
             var cachedResults =
                 new CachedResults(
@@ -283,7 +283,7 @@ namespace EFCache
                 .Invoke(_command, new object[] { disposing });
         }
 
-        private static ColumnMetadata[] GetTableMetadata(DbDataReader reader)
+        protected static ColumnMetadata[] GetTableMetadata(DbDataReader reader)
         {
             var columnMetadata = new ColumnMetadata[reader.FieldCount];
 
@@ -317,7 +317,7 @@ namespace EFCache
         }
 #endif
 
-        private void InvalidateSetsForNonQuery(int recordsAffected)
+        protected virtual void InvalidateSetsForNonQuery(int recordsAffected)
         {
             if (recordsAffected > 0 && _commandTreeFacts.AffectedEntitySets.Any())
             {
@@ -410,7 +410,7 @@ namespace EFCache
             }
         }
 
-        private string CreateKey()
+        protected string CreateKey()
         {
             return
                 string.Format(
