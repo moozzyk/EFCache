@@ -175,13 +175,13 @@ namespace EFCache
         {
             if (!IsCacheable)
             {
-                var result = _command.ExecuteReader(behavior);
-
                 if (!_commandTreeFacts.IsQuery)
                 {
                     _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                         DbConnection);
                 }
+
+                var result = _command.ExecuteReader(behavior);
 
                 return result;
             }
@@ -214,12 +214,12 @@ namespace EFCache
         {
             if (!IsCacheable)
             {
-                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
-
                 if (!_commandTreeFacts.IsQuery)
                 {
                     _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), DbConnection);
                 }
+
+                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
 
                 return result;
             }
