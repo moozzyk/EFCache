@@ -69,7 +69,7 @@ namespace EFCache
         /// <param name="affectedEntitySets">Entity sets affected by the command.</param>
         /// <param name="minCacheableRows">The minimum number of cacheable rows.</param>
         /// <param name="maxCacheableRows">The maximum number of cacheable rows.</param>
-        protected internal virtual void GetCacheableRows(ReadOnlyCollection<EntitySetBase> affectedEntitySets,
+        public virtual void GetCacheableRows(ReadOnlyCollection<EntitySetBase> affectedEntitySets,
             out int minCacheableRows, out int maxCacheableRows)
         {
             minCacheableRows = 0;
@@ -82,7 +82,7 @@ namespace EFCache
         /// <param name="affectedEntitySets">Entity sets affected by the command.</param>
         /// <param name="slidingExpiration">The sliding expiration time.</param>
         /// <param name="absoluteExpiration">The absolute expiration time.</param>
-        protected internal virtual void GetExpirationTimeout(ReadOnlyCollection<EntitySetBase> affectedEntitySets,
+        public virtual void GetExpirationTimeout(ReadOnlyCollection<EntitySetBase> affectedEntitySets,
             out TimeSpan slidingExpiration, out DateTimeOffset absoluteExpiration)
         {
             slidingExpiration = TimeSpan.MaxValue;

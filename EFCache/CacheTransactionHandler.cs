@@ -16,6 +16,12 @@ namespace EFCache
             = new ConcurrentDictionary<DbTransaction, List<string>>();
         private readonly ICache _cache;
 
+        /// Allows for subclasses to implement transaction handling without
+        /// requiring use of an <see cref="ICache"/> instance
+        public CacheTransactionHandler()
+        {
+        }
+
         public CacheTransactionHandler(ICache cache)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));

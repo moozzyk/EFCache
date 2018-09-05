@@ -6,7 +6,7 @@ namespace EFCache
     using System.Collections.Generic;
 
     [Serializable]
-    internal class CachedResults
+    public class CachedResults
     {
         private readonly ColumnMetadata[] _tableMetadata;
         private readonly List<object[]> _results;
