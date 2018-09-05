@@ -116,6 +116,21 @@ namespace EFCache
         }
 
         [Fact]
+        public void Purge_removing_unexpired_items_removes_all_items_from_cache()
+        {
+            var cache = new InMemoryCache();
+
+            cache.PutItem("1", new object(), new[] { "ES1", "ES2" }, TimeSpan.MaxValue, DateTimeOffset.Now.AddMinutes(-1));
+            cache.PutItem("2", new object(), new[] { "ES1", "ES2" }, TimeSpan.MaxValue, DateTimeOffset.MaxValue);
+
+            Assert.Equal(2, cache.Count);
+
+            cache.Purge(true);
+
+            Assert.Equal(0, cache.Count);
+        }
+
+        [Fact]
         public void GetItem_validates_parametes()
         {
             object item;

@@ -12,7 +12,7 @@ namespace EFCache
 
     public class CacheTransactionHandler : IDbTransactionInterceptor
     {
-        private readonly ConcurrentDictionary<DbTransaction, List<string>> _affectedSetsInTransaction 
+        private readonly ConcurrentDictionary<DbTransaction, List<string>> _affectedSetsInTransaction
             = new ConcurrentDictionary<DbTransaction, List<string>>();
         private readonly ICache _cache;
 
@@ -24,19 +24,18 @@ namespace EFCache
 
         public CacheTransactionHandler(ICache cache)
         {
-            if (cache == null)
-            {
-                throw new ArgumentNullException("cache");
-            }
-
-            _cache = cache;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
 
-        public virtual bool GetItem(DbTransaction transaction, string key, out object value)
+        protected CacheTransactionHandler()
+        {
+        }
+
+        public virtual bool GetItem(DbTransaction transaction, string key, DbConnection connection, out object value)
         {
             if (transaction == null)
             {
-                return _cache.GetItem(key, out value);
+                return ResolveCache(connection).GetItem(key, out value);
             }
 
             value = null;
@@ -45,19 +44,19 @@ namespace EFCache
         }
 
         public virtual void PutItem(DbTransaction transaction, string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration,
-            DateTimeOffset absoluteExpiration)
+            DateTimeOffset absoluteExpiration, DbConnection connection)
         {
             if (transaction == null)
             {
-                _cache.PutItem(key, value, dependentEntitySets, slidingExpiration, absoluteExpiration);
+                ResolveCache(connection).PutItem(key, value, dependentEntitySets, slidingExpiration, absoluteExpiration);
             }
         }
 
-        public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets)
+        public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets, DbConnection connection)
         {
             if (transaction == null)
             {
-                _cache.InvalidateSets(entitySets);
+                ResolveCache(connection).InvalidateSets(entitySets);
             }
             else
             {
@@ -83,9 +82,8 @@ namespace EFCache
 
         private IEnumerable<string> RemoveAffectedEntitySets(DbTransaction transaction)
         {
-            List<string> affectedEntitySets;
 
-            _affectedSetsInTransaction.TryRemove(transaction, out affectedEntitySets);
+            _affectedSetsInTransaction.TryRemove(transaction, out List<string> affectedEntitySets);
 
             return affectedEntitySets;
         }
@@ -96,7 +94,7 @@ namespace EFCache
 
             if (entitySets != null)
             {
-                _cache.InvalidateSets(entitySets.Distinct());
+                ResolveCache(transaction.Connection).InvalidateSets(entitySets.Distinct());
             }
         }
 
@@ -136,5 +134,8 @@ namespace EFCache
         public void RollingBack(DbTransaction transaction, DbTransactionInterceptionContext interceptionContext)
         {
         }
+
+        protected virtual ICache ResolveCache(DbConnection connection)
+            => _cache ?? throw new InvalidOperationException("Cannot resolve cache because it has not been initialized.");
     }
 }

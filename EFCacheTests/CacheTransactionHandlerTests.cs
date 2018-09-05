@@ -3,6 +3,7 @@
 namespace EFCache
 {
     using Moq;
+    using Moq.Protected;
     using System;
     using System.Collections.Generic;
     using System.Data.Common;
@@ -28,7 +29,7 @@ namespace EFCache
             mockCache.Setup(c => c.GetItem(It.IsAny<string>(), out value)).Returns(true);
 
             Assert.True(
-                new CacheTransactionHandler(mockCache.Object).GetItem(null, "key", out value));
+                new CacheTransactionHandler(mockCache.Object).GetItem(null, "key", Mock.Of<DbConnection>(), out value));
 
             mockCache.Verify(c => c.GetItem("key", out value), Times.Once());
         }
@@ -42,7 +43,8 @@ namespace EFCache
             mockCache.Setup(c => c.GetItem(It.IsAny<string>(), out value)).Returns(true);
 
             Assert.False(
-                new CacheTransactionHandler(mockCache.Object).GetItem(Mock.Of<DbTransaction>(), "key", out value));
+                new CacheTransactionHandler(mockCache.Object)
+                    .GetItem(Mock.Of<DbTransaction>(), "key", Mock.Of<DbConnection>(), out value));
 
             mockCache.Verify(c => c.GetItem(It.IsAny<string>(), out value), Times.Never());
         }
@@ -59,7 +61,7 @@ namespace EFCache
             var dateTime = new DateTime(1499);
 
             new CacheTransactionHandler(mockCache.Object)
-                .PutItem(null, key, value, sets, timeSpan, dateTime);
+                .PutItem(null, key, value, sets, timeSpan, dateTime, Mock.Of<DbConnection>());
 
             mockCache.Verify(c => c.PutItem(key, value, sets, timeSpan, dateTime), Times.Once());
         }
@@ -70,7 +72,7 @@ namespace EFCache
             var mockCache = new Mock<ICache>();
 
             new CacheTransactionHandler(mockCache.Object)
-                .PutItem(Mock.Of<DbTransaction>(), "key", new object(), new string[0], new TimeSpan(), new DateTime());
+                .PutItem(Mock.Of<DbTransaction>(), "key", new object(), new string[0], new TimeSpan(), new DateTime(), Mock.Of<DbConnection>());
 
             mockCache.Verify(
                 c => c.PutItem(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IEnumerable<string>>(),
@@ -85,7 +87,7 @@ namespace EFCache
             var sets = new string[0];
 
             new CacheTransactionHandler(mockCache.Object)
-                .InvalidateSets(null, sets);
+                .InvalidateSets(null, sets, Mock.Of<DbConnection>());
 
             mockCache.Verify(c => c.InvalidateSets(sets), Times.Once());
         }
@@ -97,8 +99,8 @@ namespace EFCache
             var transactionHandler = new CacheTransactionHandler(mockCache.Object);
 
             var transaction = Mock.Of<DbTransaction>();
-            transactionHandler.InvalidateSets(transaction, new[] {"ES1", "ES2"});
-            transactionHandler.InvalidateSets(transaction, new[] {"ES3", "ES2"});
+            transactionHandler.InvalidateSets(transaction, new[] {"ES1", "ES2"}, Mock.Of<DbConnection>());
+            transactionHandler.InvalidateSets(transaction, new[] {"ES3", "ES2"}, Mock.Of<DbConnection>());
 
             transactionHandler.Committed(transaction, Mock.Of<DbTransactionInterceptionContext>());
 
@@ -112,8 +114,8 @@ namespace EFCache
             var transactionHandler = new CacheTransactionHandler(mockCache.Object);
 
             var transaction = Mock.Of<DbTransaction>();
-            transactionHandler.InvalidateSets(transaction, new[] { "ES1", "ES2" });
-            transactionHandler.InvalidateSets(transaction, new[] { "ES3", "ES2" });
+            transactionHandler.InvalidateSets(transaction, new[] { "ES1", "ES2" }, Mock.Of<DbConnection>());
+            transactionHandler.InvalidateSets(transaction, new[] { "ES3", "ES2" }, Mock.Of<DbConnection>());
 
             transactionHandler.RolledBack(transaction, Mock.Of<DbTransactionInterceptionContext>());
             transactionHandler.Committed(transaction, Mock.Of<DbTransactionInterceptionContext>());
@@ -121,5 +123,78 @@ namespace EFCache
             mockCache.Verify(c => c.InvalidateSets(It.IsAny<IEnumerable<string>>()), Times.Never());
         }
 
+        [Fact]
+        public void ResolveCache_throws_for_uninitialized_cache()
+        {
+            var transactionHandler = new Mock<CacheTransactionHandler>{ CallBase = true }.Object;
+
+            Assert.Throws<InvalidOperationException>(() =>
+                transactionHandler.GetItem(null, "key", Mock.Of<DbConnection>(), out _));
+        }
+
+        [Fact]
+        public void GetItem_resolves_cache()
+        {
+            var mockTransactionHandler = new Mock<CacheTransactionHandler> { CallBase = true };
+            mockTransactionHandler.Protected()
+                .Setup<ICache>("ResolveCache", ItExpr.IsAny<DbConnection>())
+                .Returns(Mock.Of<ICache>());
+            var dbConnection = Mock.Of<DbConnection>();
+
+            mockTransactionHandler.Object.GetItem(null, "key", dbConnection, out _);
+
+            mockTransactionHandler.Protected()
+                .Verify("ResolveCache", Times.Once(), dbConnection);
+        }
+
+        [Fact]
+        public void PutItem_resolves_cache()
+        {
+            var mockTransactionHandler = new Mock<CacheTransactionHandler> { CallBase = true };
+            mockTransactionHandler.Protected()
+                .Setup<ICache>("ResolveCache", ItExpr.IsAny<DbConnection>())
+                .Returns(Mock.Of<ICache>());
+            var dbConnection = Mock.Of<DbConnection>();
+
+            mockTransactionHandler.Object.PutItem(null, "key", new object(), new string[0], TimeSpan.MaxValue,
+                DateTimeOffset.MaxValue, dbConnection);
+
+            mockTransactionHandler.Protected()
+                .Verify("ResolveCache", Times.Once(), dbConnection);
+        }
+
+        [Fact]
+        public void InvalidateSets_resolves_cache()
+        {
+            var mockTransactionHandler = new Mock<CacheTransactionHandler> { CallBase = true };
+            mockTransactionHandler.Protected()
+                .Setup<ICache>("ResolveCache", ItExpr.IsAny<DbConnection>())
+                .Returns(Mock.Of<ICache>());
+            var dbConnection = Mock.Of<DbConnection>();
+
+            mockTransactionHandler.Object.InvalidateSets(null, new string[0], dbConnection);
+
+            mockTransactionHandler.Protected()
+                .Verify("ResolveCache", Times.Once(), dbConnection);
+        }
+
+        [Fact]
+        public void Committed_resolves_cache()
+        {
+            var mockTransactionHandler = new Mock<CacheTransactionHandler> { CallBase = true };
+            mockTransactionHandler.Protected()
+                .Setup<ICache>("ResolveCache", ItExpr.IsAny<DbConnection>())
+                .Returns(Mock.Of<ICache>());
+            var dbConnection = Mock.Of<DbConnection>();
+            var mockTransaction = new Mock<DbTransaction>();
+            mockTransaction.Protected().SetupGet<DbConnection>("DbConnection").Returns(dbConnection);
+            var entitySets = new[] { "ES1" };
+
+            mockTransactionHandler.Object.InvalidateSets(mockTransaction.Object, entitySets, dbConnection);
+            mockTransactionHandler.Object.Committed(mockTransaction.Object, Mock.Of<DbTransactionInterceptionContext>());
+
+            mockTransactionHandler.Protected()
+                .Verify("ResolveCache", Times.Once(), dbConnection);
+        }
     }
 }

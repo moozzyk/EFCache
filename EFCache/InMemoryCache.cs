@@ -135,6 +135,11 @@ namespace EFCache
 
         public void Purge()
         {
+            Purge(false);
+        }
+
+        public void Purge(bool removeUnexpiredItems)
+        {
             lock (_cache)
             {
                 var now = DateTimeOffset.Now;
@@ -142,7 +147,7 @@ namespace EFCache
 
                 foreach (var item in _cache)
                 {
-                    if (EntryExpired(item.Value, now))
+                    if (removeUnexpiredItems || EntryExpired(item.Value, now))
                     {
                         itemsToRemove.Add(item.Key);
                     }

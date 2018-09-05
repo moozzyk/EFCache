@@ -49,9 +49,9 @@ namespace EFCache
                 var entitySetMappings =
                 containerMapping.EntitySetMappings.Where(
                     esm => esm.ModificationFunctionMappings.Any(
-                        mfm => mfm.DeleteFunctionMapping.Function == edmFunction ||
-                        mfm.InsertFunctionMapping.Function == edmFunction ||
-                        mfm.UpdateFunctionMapping.Function == edmFunction));
+                        mfm => mfm.DeleteFunctionMapping?.Function == edmFunction ||
+                        mfm.InsertFunctionMapping?.Function == edmFunction ||
+                        mfm.UpdateFunctionMapping?.Function == edmFunction));
 
                 AffectedEntitySets =
                     (from esm in entitySetMappings
