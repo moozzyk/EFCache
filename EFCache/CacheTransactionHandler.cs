@@ -94,7 +94,7 @@ namespace EFCache
 
             if (entitySets != null)
             {
-                ResolveCache(transaction.Connection).InvalidateSets(entitySets.Distinct());
+                ResolveCache(interceptionContext.Connection).InvalidateSets(entitySets.Distinct());
             }
         }
 
