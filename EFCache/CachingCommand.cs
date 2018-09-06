@@ -175,13 +175,17 @@ namespace EFCache
         {
             if (!IsCacheable)
             {
+                var cacheTransaction = _cacheTransactionHandler.BeginCacheTransaction();
+
                 if (!_commandTreeFacts.IsQuery)
                 {
                     _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                        DbConnection);
+                        DbConnection, cacheTransaction);
                 }
 
                 var result = _command.ExecuteReader(behavior);
+
+                _cacheTransactionHandler.CommitCacheTransaction(cacheTransaction);
 
                 return result;
             }
@@ -210,16 +214,21 @@ namespace EFCache
         }
 
 #if !NET40
+
         protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
         {
             if (!IsCacheable)
             {
+                var cacheTransaction = _cacheTransactionHandler.BeginCacheTransaction();
+
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), DbConnection);
+                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), DbConnection, cacheTransaction);
                 }
 
                 var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
+
+                _cacheTransactionHandler.CommitCacheTransaction(cacheTransaction);
 
                 return result;
             }

@@ -46,16 +46,37 @@ namespace EFCache
             }
         }
 
-        public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets, DbConnection connection)
+        public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets, DbConnection connection, object cacheTransaction)
         {
             if (transaction == null)
             {
-                ResolveCache(connection).InvalidateSets(entitySets);
+                var cache = ResolveCache(connection);
+                if (cache is ITransactionalCache transactionalCache)
+                    transactionalCache.InvalidateSets(entitySets, cacheTransaction);
+                else
+                    cache.InvalidateSets(entitySets);
             }
             else
             {
                 AddAffectedEntitySets(transaction, entitySets);
             }
+        }
+
+        public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets, DbConnection connection)
+        {
+            InvalidateSets(transaction, entitySets, connection, null);
+        }
+
+        public object BeginCacheTransaction()
+        {
+            if (!(_cache is ITransactionalCache transactionalCache)) return null;
+            return transactionalCache.BeginTransaction();
+        }
+
+        public void CommitCacheTransaction(object cacheTransaction)
+        {
+            if (!(_cache is ITransactionalCache transactionalCache)) return;
+            transactionalCache.CommitTransaction(cacheTransaction);
         }
 
         protected void AddAffectedEntitySets(DbTransaction transaction, IEnumerable<string> affectedEntitySets)
@@ -76,7 +97,6 @@ namespace EFCache
 
         private IEnumerable<string> RemoveAffectedEntitySets(DbTransaction transaction)
         {
-
             _affectedSetsInTransaction.TryRemove(transaction, out List<string> affectedEntitySets);
 
             return affectedEntitySets;
