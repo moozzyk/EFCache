@@ -2,19 +2,19 @@
 
 namespace EFCache
 {
-	public interface ITransactionalCache : ICache
+	public interface ILockableCache : ICache
 	{
 		/// <summary>
 		/// Send a command to the cache implementation to begin a transaction
 		/// </summary>
-		object BeginTransaction();
-
-		void InvalidateSets(IEnumerable<string> entitySets, object cacheTransaction);
+		/// <param name="entitySets"></param>
+		/// <param name="keys"></param>
+		object Lock(IEnumerable<string> entitySets, IEnumerable<string> keys);
 
 		/// <summary>
 		/// Send a command to the cache implemenation to commit the transaction
 		/// that is in process
 		/// </summary>
-		void CommitTransaction(object cacheTransaction);
+		void ReleaseLock(object @lock);
 	}
 }

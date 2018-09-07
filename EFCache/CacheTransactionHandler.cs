@@ -46,15 +46,12 @@ namespace EFCache
             }
         }
 
-        public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets, DbConnection connection, object cacheTransaction)
+        public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets, DbConnection connection)
         {
             if (transaction == null)
             {
                 var cache = ResolveCache(connection);
-                if (cache is ITransactionalCache transactionalCache)
-                    transactionalCache.InvalidateSets(entitySets, cacheTransaction);
-                else
-                    cache.InvalidateSets(entitySets);
+                cache.InvalidateSets(entitySets);
             }
             else
             {
@@ -62,21 +59,16 @@ namespace EFCache
             }
         }
 
-        public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets, DbConnection connection)
+        public object Lock(IEnumerable<string> entitySets, IEnumerable<string> keys)
         {
-            InvalidateSets(transaction, entitySets, connection, null);
+            if (!(_cache is ILockableCache lockableCache)) return null;
+            return lockableCache.Lock(entitySets, keys);
         }
 
-        public object BeginCacheTransaction()
+        public void ReleaseLock(object @lock)
         {
-            if (!(_cache is ITransactionalCache transactionalCache)) return null;
-            return transactionalCache.BeginTransaction();
-        }
-
-        public void CommitCacheTransaction(object cacheTransaction)
-        {
-            if (!(_cache is ITransactionalCache transactionalCache)) return;
-            transactionalCache.CommitTransaction(cacheTransaction);
+            if (!(_cache is ILockableCache lockableCache)) return;
+            lockableCache.ReleaseLock(@lock);
         }
 
         protected void AddAffectedEntitySets(DbTransaction transaction, IEnumerable<string> affectedEntitySets)

@@ -173,19 +173,21 @@ namespace EFCache
 
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
+            object cacheLock = null;
             if (!IsCacheable)
             {
-                var cacheTransaction = _cacheTransactionHandler.BeginCacheTransaction();
-
                 if (!_commandTreeFacts.IsQuery)
                 {
+                    var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
+                    cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets, null);
                     _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                        DbConnection, cacheTransaction);
+                        DbConnection);
                 }
 
                 var result = _command.ExecuteReader(behavior);
 
-                _cacheTransactionHandler.CommitCacheTransaction(cacheTransaction);
+                if (cacheLock != null)
+                    _cacheTransactionHandler.ReleaseLock(cacheLock);
 
                 return result;
             }
@@ -193,8 +195,10 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
+            cacheLock = _cacheTransactionHandler.Lock(null, new List<string> {key});
             if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
             {
+                _cacheTransactionHandler.ReleaseLock(cacheLock);
                 return new CachingReader((CachedResults)value);
             }
 
@@ -209,6 +213,7 @@ namespace EFCache
                     queryResults.Add(values);
                 }
 
+                _cacheTransactionHandler.ReleaseLock(cacheLock);
                 return HandleCaching(reader, key, queryResults);
             }
         }
@@ -217,18 +222,20 @@ namespace EFCache
 
         protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
         {
+            object cacheLock = null;
             if (!IsCacheable)
             {
-                var cacheTransaction = _cacheTransactionHandler.BeginCacheTransaction();
-
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), DbConnection, cacheTransaction);
+                    var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
+                    cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets, null);
+                    _cacheTransactionHandler.InvalidateSets(Transaction, affectedEntitySets, DbConnection);
                 }
 
                 var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
 
-                _cacheTransactionHandler.CommitCacheTransaction(cacheTransaction);
+                if (cacheLock != null)
+                    _cacheTransactionHandler.ReleaseLock(cacheLock);
 
                 return result;
             }
@@ -236,8 +243,10 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
+            cacheLock = _cacheTransactionHandler.Lock(null, new List<string> {key});
             if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
             {
+                _cacheTransactionHandler.ReleaseLock(cacheLock);
                 return new CachingReader((CachedResults)value);
             }
 
@@ -252,6 +261,7 @@ namespace EFCache
                     queryResults.Add(values);
                 }
 
+                _cacheTransactionHandler.ReleaseLock(cacheLock);
                 return HandleCaching(reader, key, queryResults);
             }
         }
