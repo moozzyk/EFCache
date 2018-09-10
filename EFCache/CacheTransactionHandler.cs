@@ -59,11 +59,11 @@ namespace EFCache
             }
         }
 
-        public object Lock(IEnumerable<string> entitySets, IEnumerable<string> keys)
+        public object Lock(IEnumerable<string> entitySets)
         {
             if (!(_cache is ILockableCache lockableCache)) return null;
-            return lockableCache.Lock(entitySets, keys);
-        }
+			return lockableCache.Lock(entitySets);
+		}
 
         public void ReleaseLock(object @lock)
         {

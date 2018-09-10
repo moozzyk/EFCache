@@ -174,12 +174,12 @@ namespace EFCache
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
             object cacheLock = null;
+			var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
             if (!IsCacheable)
             {
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
-                    cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets, null);
+                    cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets);
                     _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                         DbConnection);
                 }
@@ -195,7 +195,7 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
-            cacheLock = _cacheTransactionHandler.Lock(null, new List<string> {key});
+            cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets);
             if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
             {
                 _cacheTransactionHandler.ReleaseLock(cacheLock);
@@ -223,12 +223,12 @@ namespace EFCache
         protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
         {
             object cacheLock = null;
-            if (!IsCacheable)
+			var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
+			if (!IsCacheable)
             {
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
-                    cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets, null);
+                    cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets);
                     _cacheTransactionHandler.InvalidateSets(Transaction, affectedEntitySets, DbConnection);
                 }
 
@@ -243,7 +243,7 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
-            cacheLock = _cacheTransactionHandler.Lock(null, new List<string> {key});
+            cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets);
             if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
             {
                 _cacheTransactionHandler.ReleaseLock(cacheLock);
