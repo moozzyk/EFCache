@@ -90,6 +90,7 @@ namespace EFCache
             }
 
             var entitySets = _affectedSetsInTransaction.GetOrAdd(transaction, new HashSet<string>());
+			if (!(ResolveCache(connection) is ILockableCache)) return;
 			var locks = _locksInTransaction.GetOrAdd(transaction, new List<ILockedEntitySet>());
 			foreach (var affectedEntitySet in affectedEntitySets)
 			{
@@ -121,6 +122,7 @@ namespace EFCache
                 ResolveCache(interceptionContext.Connection).InvalidateSets(entitySets.Distinct());
             }
 
+			if (!(ResolveCache(interceptionContext.Connection) is ILockableCache)) return;
 			var lockedEntitySets = RemoveAffectedLocks(transaction);
 			if (lockedEntitySets != null)
 			{
