@@ -173,32 +173,24 @@ namespace EFCache
 
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
-            object cacheLock = null;
-			var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
             if (!IsCacheable)
             {
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets);
                     _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                         DbConnection);
                 }
 
                 var result = _command.ExecuteReader(behavior);
-
-                if (cacheLock != null)
-                    _cacheTransactionHandler.ReleaseLock(cacheLock);
-
+				
                 return result;
             }
 
             var key = CreateKey();
 
             object value;
-            cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets);
             if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
             {
-                _cacheTransactionHandler.ReleaseLock(cacheLock);
                 return new CachingReader((CachedResults)value);
             }
 
@@ -213,7 +205,6 @@ namespace EFCache
                     queryResults.Add(values);
                 }
 
-                _cacheTransactionHandler.ReleaseLock(cacheLock);
                 return HandleCaching(reader, key, queryResults);
             }
         }
@@ -222,20 +213,15 @@ namespace EFCache
 
         protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
         {
-            object cacheLock = null;
 			var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
 			if (!IsCacheable)
             {
-                if (!_commandTreeFacts.IsQuery)
+				if (!_commandTreeFacts.IsQuery)
                 {
-                    cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets);
                     _cacheTransactionHandler.InvalidateSets(Transaction, affectedEntitySets, DbConnection);
                 }
 
                 var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
-
-                if (cacheLock != null)
-                    _cacheTransactionHandler.ReleaseLock(cacheLock);
 
                 return result;
             }
@@ -243,10 +229,8 @@ namespace EFCache
             var key = CreateKey();
 
             object value;
-            cacheLock = _cacheTransactionHandler.Lock(affectedEntitySets);
             if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
             {
-                _cacheTransactionHandler.ReleaseLock(cacheLock);
                 return new CachingReader((CachedResults)value);
             }
 
@@ -261,7 +245,6 @@ namespace EFCache
                     queryResults.Add(values);
                 }
 
-                _cacheTransactionHandler.ReleaseLock(cacheLock);
                 return HandleCaching(reader, key, queryResults);
             }
         }

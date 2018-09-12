@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace EFCache
 {
@@ -13,13 +14,13 @@ namespace EFCache
 		/// provided of the entity sets
 		/// </summary>
 		/// <param name="entitySets">The set of entity sets to lock</param>
-		object Lock(IEnumerable<string> entitySets);
+		List<ILockedEntitySet> Lock(IEnumerable<string> entitySets);
 
 		/// <summary>
 		/// Send a command to the cache implemenation to release the set of locks on an entity set
 		/// that is in process
 		/// </summary>
 		/// <param name="locks">The locks created via the <see cref="Lock"/> method</param>
-		void ReleaseLock(object locks);
+		void ReleaseLock(IEnumerable<ILockedEntitySet> locks);
 	}
 }
