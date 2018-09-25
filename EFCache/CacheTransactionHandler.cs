@@ -12,11 +12,14 @@ namespace EFCache
 
     public class CacheTransactionHandler : IDbTransactionInterceptor
     {
-        private readonly ConcurrentDictionary<DbTransaction, List<string>> _affectedSetsInTransaction
-            = new ConcurrentDictionary<DbTransaction, List<string>>();
-        private readonly ICache _cache;
+        private readonly ConcurrentDictionary<DbTransaction, HashSet<string>> _affectedSetsInTransaction
+            = new ConcurrentDictionary<DbTransaction, HashSet<string>>();
+		private readonly ConcurrentDictionary<DbTransaction, List<ILockedEntitySet>> _locksInTransaction =
+			new ConcurrentDictionary<DbTransaction, List<ILockedEntitySet>>();
+		private readonly ICache _cache;
 
-        public CacheTransactionHandler(ICache cache)
+
+		public CacheTransactionHandler(ICache cache)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
@@ -48,17 +51,33 @@ namespace EFCache
 
         public virtual void InvalidateSets(DbTransaction transaction, IEnumerable<string> entitySets, DbConnection connection)
         {
+			var cache = ResolveCache(connection);
             if (transaction == null)
-            {
-                ResolveCache(connection).InvalidateSets(entitySets);
+			{
+				var sets = entitySets as string[] ?? entitySets.ToArray();
+				var lockedEntitySets = Lock(sets, connection);
+                cache.InvalidateSets(sets);
+				ReleaseLock(lockedEntitySets, connection);
             }
             else
             {
-                AddAffectedEntitySets(transaction, entitySets);
+                AddAffectedEntitySets(transaction, entitySets, connection);
             }
         }
 
-        protected void AddAffectedEntitySets(DbTransaction transaction, IEnumerable<string> affectedEntitySets)
+        public List<ILockedEntitySet> Lock(IEnumerable<string> entitySets, DbConnection connection)
+        {
+            if (!(ResolveCache(connection) is ILockableCache lockableCache)) return null;
+			return lockableCache.Lock(entitySets);
+		}
+
+        public void ReleaseLock(IEnumerable<ILockedEntitySet> lockedEntitySets, DbConnection connection)
+        {
+            if (!(ResolveCache(connection) is ILockableCache lockableCache)) return;
+            lockableCache.ReleaseLock(lockedEntitySets);
+        }
+
+        protected void AddAffectedEntitySets(DbTransaction transaction, IEnumerable<string> affectedEntitySets, DbConnection connection)
         {
             if (transaction == null)
             {
@@ -70,27 +89,46 @@ namespace EFCache
                 throw new ArgumentNullException("affectedEntitySets");
             }
 
-            var entitySets = _affectedSetsInTransaction.GetOrAdd(transaction, new List<string>());
-            entitySets.AddRange(affectedEntitySets);
-        }
+            var entitySets = _affectedSetsInTransaction.GetOrAdd(transaction, new HashSet<string>());
+			if (!(ResolveCache(connection) is ILockableCache)) return;
+			var locks = _locksInTransaction.GetOrAdd(transaction, new List<ILockedEntitySet>());
+			foreach (var affectedEntitySet in affectedEntitySets)
+			{
+				if (entitySets.Add(affectedEntitySet))
+					locks.AddRange(Lock(new List<string>{affectedEntitySet}, connection));
+
+			}
+		}
 
         private IEnumerable<string> RemoveAffectedEntitySets(DbTransaction transaction)
         {
-
-            _affectedSetsInTransaction.TryRemove(transaction, out List<string> affectedEntitySets);
+            _affectedSetsInTransaction.TryRemove(transaction, out var affectedEntitySets);
 
             return affectedEntitySets;
         }
 
-        public void Committed(DbTransaction transaction, DbTransactionInterceptionContext interceptionContext)
+		private IEnumerable<ILockedEntitySet> RemoveAffectedLocks(DbTransaction transaction)
+		{
+			_locksInTransaction.TryRemove(transaction, out var locks);
+
+			return locks;
+		}
+		
+		public void Committed(DbTransaction transaction, DbTransactionInterceptionContext interceptionContext)
         {
             var entitySets = RemoveAffectedEntitySets(transaction);
-
             if (entitySets != null)
             {
                 ResolveCache(interceptionContext.Connection).InvalidateSets(entitySets.Distinct());
             }
-        }
+
+			if (!(ResolveCache(interceptionContext.Connection) is ILockableCache)) return;
+			var lockedEntitySets = RemoveAffectedLocks(transaction);
+			if (lockedEntitySets != null)
+			{
+				ReleaseLock(lockedEntitySets, interceptionContext.Connection);
+			}
+		}
 
         public void Committing(DbTransaction transaction, DbTransactionInterceptionContext interceptionContext)
         {

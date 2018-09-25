@@ -175,14 +175,14 @@ namespace EFCache
         {
             if (!IsCacheable)
             {
-                var result = _command.ExecuteReader(behavior);
-
                 if (!_commandTreeFacts.IsQuery)
                 {
                     _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                         DbConnection);
                 }
 
+                var result = _command.ExecuteReader(behavior);
+				
                 return result;
             }
 
@@ -210,16 +210,18 @@ namespace EFCache
         }
 
 #if !NET40
+
         protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
         {
-            if (!IsCacheable)
+			var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
+			if (!IsCacheable)
             {
-                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
-
-                if (!_commandTreeFacts.IsQuery)
+				if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), DbConnection);
+                    _cacheTransactionHandler.InvalidateSets(Transaction, affectedEntitySets, DbConnection);
                 }
+
+                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
 
                 return result;
             }
