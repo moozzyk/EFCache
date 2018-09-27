@@ -12,12 +12,12 @@ namespace EFCache
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class CachingCommand : DbCommand, ICloneable
+    public class CachingCommand : DbCommand, ICloneable
     {
-        private readonly DbCommand _command;
-        private readonly CommandTreeFacts _commandTreeFacts;
-        private readonly CacheTransactionHandler _cacheTransactionHandler;
-        private readonly CachingPolicy _cachingPolicy;
+        protected readonly DbCommand _command;
+        protected readonly CommandTreeFacts _commandTreeFacts;
+        protected readonly CacheTransactionHandler _cacheTransactionHandler;
+        protected readonly CachingPolicy _cachingPolicy;
 
         public CachingCommand(DbCommand command, CommandTreeFacts commandTreeFacts, CacheTransactionHandler cacheTransactionHandler, CachingPolicy cachingPolicy)
         {
@@ -32,12 +32,12 @@ namespace EFCache
             _cachingPolicy = cachingPolicy;
         }
 
-        internal CommandTreeFacts CommandTreeFacts
+        public CommandTreeFacts CommandTreeFacts
         {
             get { return _commandTreeFacts; }
         }
 
-        internal CacheTransactionHandler CacheTransactionHandler
+        public CacheTransactionHandler CacheTransactionHandler
         {
             get { return _cacheTransactionHandler; }
         }
@@ -52,7 +52,7 @@ namespace EFCache
             get { return _command; }
         }
 
-        private bool IsCacheable
+        protected bool IsCacheable
         {
             get
             {
@@ -75,7 +75,7 @@ namespace EFCache
             }
         }
 
-        private bool IsQueryAlwaysCached
+        protected bool IsQueryAlwaysCached
         {
             get
             {
@@ -175,14 +175,14 @@ namespace EFCache
         {
             if (!IsCacheable)
             {
-                var result = _command.ExecuteReader(behavior);
-
                 if (!_commandTreeFacts.IsQuery)
                 {
                     _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                         DbConnection);
                 }
 
+                var result = _command.ExecuteReader(behavior);
+				
                 return result;
             }
 
@@ -210,16 +210,18 @@ namespace EFCache
         }
 
 #if !NET40
+
         protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
         {
-            if (!IsCacheable)
+			var affectedEntitySets = _commandTreeFacts.AffectedEntitySets.Select(s => s.Name).ToList();
+			if (!IsCacheable)
             {
-                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
-
-                if (!_commandTreeFacts.IsQuery)
+				if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), DbConnection);
+                    _cacheTransactionHandler.InvalidateSets(Transaction, affectedEntitySets, DbConnection);
                 }
+
+                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
 
                 return result;
             }
@@ -248,7 +250,7 @@ namespace EFCache
         }
 #endif
 
-        private DbDataReader HandleCaching(DbDataReader reader, string key, List<object[]> queryResults)
+        protected virtual DbDataReader HandleCaching(DbDataReader reader, string key, List<object[]> queryResults)
         {
             var cachedResults =
                 new CachedResults(
@@ -285,7 +287,7 @@ namespace EFCache
                 .Invoke(_command, new object[] { disposing });
         }
 
-        private static ColumnMetadata[] GetTableMetadata(DbDataReader reader)
+        protected static ColumnMetadata[] GetTableMetadata(DbDataReader reader)
         {
             var columnMetadata = new ColumnMetadata[reader.FieldCount];
 
@@ -319,7 +321,7 @@ namespace EFCache
         }
 #endif
 
-        private void InvalidateSetsForNonQuery(int recordsAffected)
+        protected virtual void InvalidateSetsForNonQuery(int recordsAffected)
         {
             if (recordsAffected > 0 && _commandTreeFacts.AffectedEntitySets.Any())
             {
@@ -415,7 +417,7 @@ namespace EFCache
             }
         }
 
-        private string CreateKey()
+        protected string CreateKey()
         {
             return
                 string.Format(

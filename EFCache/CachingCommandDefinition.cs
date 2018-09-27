@@ -7,12 +7,12 @@ namespace EFCache
     using System.Data.Entity.Core.Common;
     using System.Data.Entity.Core.Metadata.Edm;
 
-    internal class CachingCommandDefinition : DbCommandDefinition
+    public class CachingCommandDefinition : DbCommandDefinition
     {
-        private readonly DbCommandDefinition _commandDefintion;
-        private readonly CommandTreeFacts _commandTreeFacts;
-        private readonly CacheTransactionHandler _cacheTransactionHandler;
-        private readonly CachingPolicy _cachingPolicy;
+        protected readonly DbCommandDefinition _commandDefintion;
+        protected readonly CommandTreeFacts _commandTreeFacts;
+        protected readonly CacheTransactionHandler _cacheTransactionHandler;
+        protected readonly CachingPolicy _cachingPolicy;
 
         public bool IsQuery
         {
