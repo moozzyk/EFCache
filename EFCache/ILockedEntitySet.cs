@@ -9,9 +9,9 @@ namespace EFCache
 	/// <summary>
 	/// Represents an object that holds a mutex lock in the cache for an entity set
 	/// </summary>
-	public interface ILockedEntitySet
+	public interface ILockedEntitySet : IDisposable
 	{
 		string EntitySet { get; set; }
-		object Lock { get; set; }
+		ICachedEntitySetLock Lock { get; set; }
 	}
 }

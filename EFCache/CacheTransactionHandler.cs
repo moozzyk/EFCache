@@ -56,8 +56,15 @@ namespace EFCache
 			{
 				var sets = entitySets as string[] ?? entitySets.ToArray();
 				var lockedEntitySets = Lock(sets, connection);
-                cache.InvalidateSets(sets);
-				ReleaseLock(lockedEntitySets, connection);
+				try
+				{
+					cache.InvalidateSets(sets);
+
+				}
+				finally
+				{
+					ReleaseLock(lockedEntitySets, connection);				
+				}
             }
             else
             {
@@ -117,17 +124,23 @@ namespace EFCache
 		public void Committed(DbTransaction transaction, DbTransactionInterceptionContext interceptionContext)
         {
             var entitySets = RemoveAffectedEntitySets(transaction);
-            if (entitySets != null)
-            {
-                ResolveCache(interceptionContext.Connection).InvalidateSets(entitySets.Distinct());
-            }
-
-			if (!(ResolveCache(interceptionContext.Connection) is ILockableCache)) return;
-			var lockedEntitySets = RemoveAffectedLocks(transaction);
-			if (lockedEntitySets != null)
+			if (entitySets == null) return;
+			try
 			{
-				ReleaseLock(lockedEntitySets, interceptionContext.Connection);
+				ResolveCache(interceptionContext.Connection).InvalidateSets(entitySets.Distinct());
 			}
+			finally
+			{
+				if ((ResolveCache(interceptionContext.Connection) is ILockableCache))
+				{
+					var lockedEntitySets = RemoveAffectedLocks(transaction);
+					if (lockedEntitySets != null)
+					{
+						ReleaseLock(lockedEntitySets, interceptionContext.Connection);
+					}
+				}
+			}
+
 		}
 
         public void Committing(DbTransaction transaction, DbTransactionInterceptionContext interceptionContext)

@@ -86,6 +86,7 @@
     <Compile Include="CachingPolicy.cs" />
     <Compile Include="DbContextExtensions.cs" />
     <Compile Include="EntityFrameworkCache.cs" />
+    <Compile Include="ICachedEntitySetLock.cs" />
     <Compile Include="ILockableCache.cs" />
     <Compile Include="ILockedEntitySet.cs" />
     <Compile Include="QueryableExtensions.cs" />
