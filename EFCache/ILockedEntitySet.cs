@@ -12,6 +12,6 @@ namespace EFCache
 	public interface ILockedEntitySet : IDisposable
 	{
 		string EntitySet { get; set; }
-		ICachedEntitySetLock Lock { get; set; }
+		IDisposable Lock { get; set; }
 	}
 }
