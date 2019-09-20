@@ -214,7 +214,7 @@ namespace EFCache
         {
             if (!IsCacheable)
             {
-                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken);
+                var result = await _command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
 
                 if (!_commandTreeFacts.IsQuery)
                 {
@@ -232,11 +232,11 @@ namespace EFCache
                 return new CachingReader((CachedResults)value);
             }
 
-            using (var reader = await _command.ExecuteReaderAsync(behavior, cancellationToken))
+            using (var reader = await _command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false))
             {
                 var queryResults = new List<object[]>();
 
-                while (await reader.ReadAsync(cancellationToken))
+                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                 {
                     var values = new object[reader.FieldCount];
                     reader.GetValues(values);
@@ -311,7 +311,7 @@ namespace EFCache
 #if !NET40
         public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
         {
-            var recordsAffected = await _command.ExecuteNonQueryAsync(cancellationToken);
+            var recordsAffected = await _command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
             InvalidateSetsForNonQuery(recordsAffected);
 
@@ -367,7 +367,7 @@ namespace EFCache
         {
             if (!IsCacheable)
             {
-                return await _command.ExecuteScalarAsync(cancellationToken);
+                return await _command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             }
 
             var key = CreateKey();
@@ -379,7 +379,7 @@ namespace EFCache
                 return value;
             }
 
-            value = await _command.ExecuteScalarAsync(cancellationToken);
+            value = await _command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 
             TimeSpan slidingExpiration;
             DateTimeOffset absoluteExpiration;
