@@ -3,14 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCache", "EFCache\EFCache.csproj", "{ED6F66AC-B415-46A8-A86B-E69158B23D2D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCache", "src\EFCache\EFCache.csproj", "{ED6F66AC-B415-46A8-A86B-E69158B23D2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCacheTests", "EFCacheTests\EFCacheTests.csproj", "{EF70FAE0-A54F-46F7-A643-915583FA1AF6}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{882D51D8-B07E-4A06-AC69-E57F8162F48B}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCacheTests", "test\EFCacheTests\EFCacheTests.csproj", "{EF70FAE0-A54F-46F7-A643-915583FA1AF6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

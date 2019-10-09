@@ -1,5 +1,0 @@
-﻿TODO: 
-
-1.1:
-- TransactionScope handling (?)
-- multiple resultsets (consider only if supported in EF6.1.1 and CodeFirstStoreFunctions project)?

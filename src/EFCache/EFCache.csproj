@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>CodeFirstStoreFunctions</RootNamespace>
+    <TargetFrameworks>net462;netstandard2.1</TargetFrameworks>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <IsPackable>true</IsPackable>
+    <AssemblyOriginatorKeyFile>$(KeyFile)</AssemblyOriginatorKeyFile>
+    <SignAssembly Condition="'$(AssemblyOriginatorKeyFile)' != ''">true</SignAssembly>
+    <DefineConstants Condition="'$(AssemblyOriginatorKeyFile)' == ''">$(DefineConstants);INTERNALSVISIBLETOENABLED</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <PackageId>EntityFramework.CodeFirstStoreFunctions</PackageId>
+    <Version>1.2.0</Version>
+    <Authors>Pawel "moozzyk" Kadluczka</Authors>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <Title>Second Level Cache for Entity Framework 6.3.0+.</Title>
+    <Description>>Second Level Cache for Entity Framework 6.3 and newer.</Description>
+    <PackageSummary>>Second Level Cache for Entity Framework 6.3 and newer..</PackageSummary>
+    <PackageProjectUrl>https://github.com/moozzyk/EFCache</PackageProjectUrl>
+    <PackageLanguage>en-US</PackageLanguage>
+    <PackageTags>EF6 EF6.3 EF entity-framework EntityFramework Entity Framework 6.1 Second Level Cache moozzyk blog.3d-logic.com</PackageTags>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+
+  <Target Name="ValidatePack" BeforeTargets="BeforeBuild">
+    <Warning Text="Signing debug build." Condition="'$(AssemblyOriginatorKeyFile)' != '' AND '$(Configuration)' != 'Release'" />
+  </Target>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\License.txt" Pack="true" PackagePath="$(PackageLicenseFile)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.3.0" />
+  </ItemGroup>
+</Project>
