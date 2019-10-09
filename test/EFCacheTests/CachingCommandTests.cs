@@ -823,7 +823,7 @@ namespace EFCache
                 mockTransactionHandler.Object,
                 Mock.Of<CachingPolicy>()).ExecuteNonQuery();
 
-            Assert.Equal(rowsAffected, 1);
+            Assert.Equal(1, rowsAffected);
             mockCommand.Verify(c => c.ExecuteNonQuery(), Times.Once());
             mockTransactionHandler
                 .Verify(h => h.InvalidateSets(transaction, new[] { "ES1", "ES2" }, It.IsNotNull<DbConnection>()), Times.Once());
@@ -845,7 +845,7 @@ namespace EFCache
                 mockTransactionHandler.Object,
                 Mock.Of<CachingPolicy>()).ExecuteNonQuery();
 
-            Assert.Equal(rowsAffected, 0);
+            Assert.Equal(0, rowsAffected);
             mockCommand.Verify(c => c.ExecuteNonQuery(), Times.Once());
             mockTransactionHandler
                 .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>(), It.IsAny<DbConnection>()), Times.Never());
@@ -867,7 +867,7 @@ namespace EFCache
                 mockTransactionHandler.Object,
                 Mock.Of<CachingPolicy>()).ExecuteNonQuery();
 
-            Assert.Equal(rowsAffected, 1);
+            Assert.Equal(1, rowsAffected);
             mockCommand.Verify(c => c.ExecuteNonQuery(), Times.Once());
             mockTransactionHandler
                 .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>(), It.IsNotNull<DbConnection>()), Times.Never());
@@ -1045,7 +1045,7 @@ namespace EFCache
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync();
 
-                Assert.Equal(rowsAffected, 1);
+                Assert.Equal(1, rowsAffected);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
                 mockTransactionHandler
                     .Verify(h => h.InvalidateSets(transaction, new[] {"ES1", "ES2"}, It.IsNotNull<DbConnection>()), Times.Once());
@@ -1067,7 +1067,7 @@ namespace EFCache
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync();
 
-                Assert.Equal(rowsAffected, 0);
+                Assert.Equal(0, rowsAffected);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
                 mockTransactionHandler
                     .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>(), It.IsAny<DbConnection>()),
@@ -1092,7 +1092,7 @@ namespace EFCache
                     mockTransactionHandler.Object,
                     Mock.Of<CachingPolicy>()).ExecuteNonQueryAsync();
 
-                Assert.Equal(rowsAffected, 1);
+                Assert.Equal(1, rowsAffected);
                 mockCommand.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once());
                 mockTransactionHandler
                     .Verify(h => h.InvalidateSets(It.IsAny<DbTransaction>(), It.IsAny<IEnumerable<string>>(), It.IsAny<DbConnection>()),

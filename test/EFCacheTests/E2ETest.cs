@@ -298,7 +298,7 @@ namespace EFCache
                 Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
                 q.ToList();
-                Assert.False(Cache.CacheDictionary.Keys.Any(k => k.Contains(q.ToString())));
+                Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q.ToString()));
             }
         }
 
@@ -319,7 +319,7 @@ namespace EFCache
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, query);
 
                 ctx.Entities.Count(e => e.Flag != null);
-                Assert.False(Cache.CacheDictionary.Keys.Any(k => k.Contains(query.ToString())));
+                Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(query.ToString()));
             }
         }
 
@@ -332,7 +332,7 @@ namespace EFCache
                 Assert.True(AlwaysCachedQueriesRegistrar.Instance.IsQueryCached(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
                 q.ToList();
-                Assert.True(Cache.CacheDictionary.Keys.Any(k => k.Contains(q.ToString())));
+                Assert.Contains(Cache.CacheDictionary.Keys, k => k.Contains(q.ToString()));
             }
         }
 
@@ -345,7 +345,7 @@ namespace EFCache
                 Assert.True(AlwaysCachedQueriesRegistrar.Instance.IsQueryCached(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
                 q.ToList();
-                Assert.True(Cache.CacheDictionary.Keys.Any(k => k.Contains(q.ToString())));
+                Assert.Contains(Cache.CacheDictionary.Keys, k => k.Contains(q.ToString()));
             }
         }
 
