@@ -317,7 +317,7 @@ namespace EFCache
             Assert.IsType<CachingReader>(reader);
             mockReader
                 .Protected()
-                .Verify("Dispose", Times.Once(), true);
+                .Verify("Dispose", Times.Once(), exactParameterMatch: true, true);
 
             Assert.True(reader.Read());
             Assert.Equal("int", reader.GetDataTypeName(0));
@@ -347,7 +347,7 @@ namespace EFCache
                 Assert.IsNotType<CachingReader>(reader);
                 mockReader
                     .Protected()
-                    .Verify("Dispose", Times.Never(), true);
+                    .Verify("Dispose", Times.Never(), exactParameterMatch:true, It.IsAny<bool>());
             }
         }
 
@@ -885,7 +885,7 @@ namespace EFCache
                 mockTransactionHandler.Object,
                 Mock.Of<CachingPolicy>()).Dispose();
 
-            mockCommand.Protected().Verify("Dispose", Times.Once(), true);
+            mockCommand.Protected().Verify("Dispose", Times.Once(), exactParameterMatch: true, true);
         }
 
         private static Mock<DbCommand> CreateMockCommand(DbParameterCollection parameterCollection = null, DbDataReader reader = null, DbTransaction transaction = null)
@@ -1359,7 +1359,7 @@ namespace EFCache
                 Assert.IsType<CachingReader>(reader);
                 mockReader
                     .Protected()
-                    .Verify("Dispose", Times.Once(), true);
+                    .Verify("Dispose", Times.Once(), exactParameterMatch: true, true);
 
                 Assert.True(reader.Read());
                 Assert.Equal("int", reader.GetDataTypeName(0));
@@ -1389,7 +1389,7 @@ namespace EFCache
                     Assert.IsNotType<CachingReader>(reader);
                     mockReader
                         .Protected()
-                        .Verify("Dispose", Times.Never(), true);
+                        .Verify("Dispose", Times.Never(), exactParameterMatch: true, It.IsAny<bool>());
                 }
             }
 

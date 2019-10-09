@@ -8,7 +8,6 @@ namespace EFCache
     using System.Data.Entity.Infrastructure;
     using System.Linq;
     using System.Threading.Tasks;
-    using System.Transactions;
     using Xunit;
 
     public class Entity
@@ -38,7 +37,7 @@ namespace EFCache
     {
         static MyContext()
         {
-            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<MyContext>());
+            Database.SetInitializer(new DropCreateDatabaseAlways<MyContext>());
         }
 
         public DbSet<Entity> Entities { get; set; }
@@ -254,21 +253,19 @@ namespace EFCache
         [Fact]
         public void Can_read_null_values()
         {
-            // TODO: Fix
-            Assert.True(false);
-        /*
-            using (var trx = new TransactionScope())
+            using (var ctx = new MyContext())
             {
-                using (var ctx = new MyContext())
-                {
-                    ctx.Entities.Add(new Entity());
-                    ctx.SaveChanges();
-                    var e = ctx.Entities.First();
-                    Assert.Null(e.Name);
-                    Assert.Null(e.Flag);
-                }
+                ctx.Entities.RemoveRange(ctx.Entities);
             }
-         */
+
+            using (var ctx = new MyContext())
+            {
+                ctx.Entities.Add(new Entity());
+                ctx.SaveChanges();
+                var e = ctx.Entities.First();
+                Assert.Null(e.Name);
+                Assert.Null(e.Flag);
+            }
         }
 
         [Fact]
