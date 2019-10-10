@@ -43,3 +43,7 @@ EntityFrameworkCache.Initialize(new InMemoryCache());
 ```
 
 You can find more details in my [blogpost](http://blog.3d-logic.com/2014/03/20/second-level-cache-for-ef-6-1/)
+
+## Disclaimer
+
+I am providing code in the repository to you under an open source license. Because this is my personal repository, the license you receive to my code is from me and not my employer (Facebook)
