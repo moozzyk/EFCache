@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RootNamespace>CodeFirstStoreFunctions</RootNamespace>
+    <RootNamespace>EFCache</RootNamespace>
     <TargetFrameworks>net462;netstandard2.1</TargetFrameworks>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <IsPackable>true</IsPackable>
@@ -10,7 +10,7 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <PackageId>EntityFramework.CodeFirstStoreFunctions</PackageId>
+    <PackageId>EntityFramework.Cache</PackageId>
     <Version>1.2.0</Version>
     <Authors>Pawel "moozzyk" Kadluczka</Authors>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
