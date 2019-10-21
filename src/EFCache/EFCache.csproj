@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>EFCache</RootNamespace>
-    <TargetFrameworks>net462;netstandard2.1</TargetFrameworks>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <TargetFrameworks>net46;netstandard2.1</TargetFrameworks>
+    <AssemblyVersion>1.2.1.0</AssemblyVersion>
     <IsPackable>true</IsPackable>
     <AssemblyOriginatorKeyFile>$(KeyFile)</AssemblyOriginatorKeyFile>
     <SignAssembly Condition="'$(AssemblyOriginatorKeyFile)' != ''">true</SignAssembly>
@@ -11,12 +11,12 @@
   
   <PropertyGroup>
     <PackageId>EntityFramework.Cache</PackageId>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <Authors>Pawel "moozzyk" Kadluczka</Authors>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
     <Title>Second Level Cache for Entity Framework 6.3.0+.</Title>
     <Description>Second Level Cache for Entity Framework 6.3 and newer.</Description>
-    <PackageSummary>>Second Level Cache for Entity Framework 6.3 and newer..</PackageSummary>
+    <PackageSummary>Second Level Cache for Entity Framework 6.3 and newer..</PackageSummary>
     <PackageProjectUrl>https://github.com/moozzyk/EFCache</PackageProjectUrl>
     <PackageLanguage>en-US</PackageLanguage>
     <PackageTags>EF6 EF6.3 EF entity-framework EntityFramework Entity Framework 6.1 .NET Core Second Level Cache moozzyk blog.3d-logic.com</PackageTags>

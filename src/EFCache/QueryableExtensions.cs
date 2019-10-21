@@ -61,11 +61,9 @@ namespace EFCache
 
         private static ObjectQuery TryGetObjectQuery<T>(IQueryable<T> source)
         {
-            var dbQuery = source as DbQuery<T>;
-
-            if (dbQuery != null)
+            if (source is DbQuery<T>)
             {
-                const BindingFlags privateFieldFlags = 
+                const BindingFlags privateFieldFlags =
                     BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
 
                 var internalQuery =
