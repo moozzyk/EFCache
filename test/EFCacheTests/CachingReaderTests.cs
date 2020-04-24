@@ -550,6 +550,19 @@ namespace EFCache
             }
         }
 
+        [Fact]
+        public void GetBoolean_converts_numeric_values_for_column()
+        {
+            using (var reader = CreateCachingReader(1))
+            {
+                var result = reader.Read();
+                Assert.True(result);
+
+                Assert.False(reader.GetBoolean(0)); // (int)0
+                Assert.True(reader.GetBoolean(4)); // long.MaxValue
+            }
+        }
+
         #endregion
 
         #region GetInt64
