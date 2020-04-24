@@ -4,11 +4,17 @@ namespace EFCache
 {
     using System;
     using System.Collections.Generic;
+    using System.Data.Common;
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using Xunit;
+#if NET462
+    using SQLite.CodeFirst;
+    using System.Data.SQLite;
+#endif
 
     public class Entity
     {
@@ -35,9 +41,13 @@ namespace EFCache
 
     public class MyContext : DbContext
     {
-        static MyContext()
+        public MyContext()
         {
-            Database.SetInitializer(new DropCreateDatabaseAlways<MyContext>());
+        }
+
+        public MyContext(DbConnection connection)
+            : base(connection, true)
+        {
         }
 
         public DbSet<Entity> Entities { get; set; }
@@ -48,9 +58,23 @@ namespace EFCache
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
+            Database.SetInitializer(GetDatabaseInitializerStrategy(modelBuilder));
+
             modelBuilder.Entity<EntityMappedToSprocs>()
                 .MapToStoredProcedures()
                 .ToTable("EntitiesMappedToSprocs");
+        }
+
+        private IDatabaseInitializer<MyContext> GetDatabaseInitializerStrategy(DbModelBuilder modelBuilder)
+        {
+
+#if NET462
+            if (this.Database.Connection is SQLiteConnection)
+            {
+                return new SqliteDropCreateDatabaseAlways<MyContext>(modelBuilder);
+            }
+#endif
+            return new DropCreateDatabaseAlways<MyContext>();
         }
     }
 
@@ -285,6 +309,40 @@ namespace EFCache
                 Assert.NotNull(ctx.GetCachingProviderServices());
             }
         }
+
+#if NET462
+        [Fact]
+        public void Query_Any_using_sqlite_returns_correct_value()
+        {
+            var tempFile = Path.GetTempFileName();
+
+            try
+            {
+                var factory = DbProviderFactories.GetFactory("System.Data.SQLite.EF6");
+
+                using (var connection = factory.CreateConnection())
+                {
+                    connection.ConnectionString = $"data source={tempFile};initial catalog=EFCache.MyContext;";
+
+                    using (var ctx = new MyContext(connection))
+                    {
+                        ctx.Entities.Add(new Entity() { Name = "test" });
+
+                        ctx.SaveChanges();
+
+                        Assert.True(ctx.Entities.Any(x => x.Name == "test"));
+                        Assert.False(ctx.Entities.Any(x => x.Name == "test2"));
+                    }
+                }
+            }
+            finally
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                File.Delete(tempFile);
+            }
+        }
+#endif
 
         [Fact]
         public void Query_results_not_cached_if_NotCached_used()

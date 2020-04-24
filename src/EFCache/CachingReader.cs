@@ -56,7 +56,18 @@ namespace EFCache
 
         public override bool GetBoolean(int ordinal)
         {
-            return (bool)GetValue(ordinal);
+            var value = GetValue(ordinal);
+            switch (value)
+            {
+                case bool boolValue:
+                    return boolValue;
+                case int intValue:
+                    return intValue != 0;
+                case long longValue:
+                    return longValue != 0;
+                default:
+                    throw new NotImplementedException($"{value.GetType()}");
+            }
         }
 
         public override byte GetByte(int ordinal)

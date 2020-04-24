@@ -11,6 +11,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
+    <PackageReference Include="SQLite.CodeFirst" Version="1.5.3.29" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.112.1" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="System.Data.SQLite.EF6" Version="1.0.112.1" Condition="'$(TargetFramework)' == 'net462'" />
+    <PackageReference Include="System.Data.SQLite.Linq" Version="1.0.112.1" Condition="'$(TargetFramework)' == 'net462'" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
     <PackageReference Include="Moq" Version="4.12.0" />
