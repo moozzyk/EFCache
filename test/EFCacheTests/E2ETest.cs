@@ -155,6 +155,16 @@ namespace EFCache
             EntityFrameworkCache.Initialize(E2ETest.Cache);
         }
 
+        public E2ETest()
+        {
+            // reset database
+            using (var ctx = new MyContext())
+            {
+                ctx.Database.Delete();
+                ctx.Database.Create();
+            }
+        }
+
         [Fact]
         public void Cached_data_returned_from_cache()
         {
@@ -354,6 +364,84 @@ namespace EFCache
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
                 q.ToList();
                 Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q.ToString()));
+            }
+        }
+
+        [Fact]
+        public void Query_results_not_cached_if_FirstNotCached_used()
+        {
+            using (var ctx = new MyContext())
+            {
+                ctx.Entities.Add(new Entity());
+                ctx.SaveChanges();
+
+                var e = ctx.Entities.FirstNotCached();
+                var q = @"SELECT TOP (1) 
+    [c].[Id] AS [Id], 
+    [c].[Name] AS [Name], 
+    [c].[Flag] AS [Flag]
+    FROM [dbo].[Entities] AS [c]";
+                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q));
+
+                Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q));
+            }
+        }
+
+        [Fact]
+        public void Query_results_not_cached_if_FirstOrDefaultNotCached_used()
+        {
+            using (var ctx = new MyContext())
+            {
+                var e = ctx.Entities.FirstOrDefaultNotCached();
+                var q = @"SELECT TOP (1) 
+    [c].[Id] AS [Id], 
+    [c].[Name] AS [Name], 
+    [c].[Flag] AS [Flag]
+    FROM [dbo].[Entities] AS [c]";
+                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q));
+                
+                Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q));
+            }
+        }
+
+        [Fact]
+        public void Query_results_not_cached_if_SingleNotCached_used()
+        {
+            using (var ctx = new MyContext())
+            {
+                ctx.Entities.Add(new Entity());
+                ctx.SaveChanges();
+
+                var e = ctx.Entities.SingleNotCached();
+                var q = @"SELECT TOP (2) 
+    [c].[Id] AS [Id], 
+    [c].[Name] AS [Name], 
+    [c].[Flag] AS [Flag]
+    FROM [dbo].[Entities] AS [c]";
+                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q));
+
+                Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q));
+            }
+        }
+
+        [Fact]
+        public void Query_results_not_cached_if_SingleOrDefaultNotCached_used()
+        {
+            using (var ctx = new MyContext())
+            {
+                var e = ctx.Entities.SingleOrDefaultNotCached();
+                var q = @"SELECT TOP (2) 
+    [c].[Id] AS [Id], 
+    [c].[Name] AS [Name], 
+    [c].[Flag] AS [Flag]
+    FROM [dbo].[Entities] AS [c]";
+                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q));
+
+                Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q));
             }
         }
 

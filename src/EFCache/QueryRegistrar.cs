@@ -16,12 +16,12 @@ namespace EFCache
         {
             if (workspace == null)
             {
-                throw new ArgumentNullException("workspace");
+                throw new ArgumentNullException(nameof(workspace));
             }
 
             if (string.IsNullOrWhiteSpace(sql))
             {
-                throw new ArgumentNullException("sql");
+                throw new ArgumentNullException(nameof(sql));
             }
 
             var queries = _queries.GetOrAdd(workspace, new HashSet<string>());
@@ -35,12 +35,12 @@ namespace EFCache
         {
             if (workspace == null)
             {
-                throw new ArgumentNullException("workspace");
+                throw new ArgumentNullException(nameof(workspace));
             }
 
             if (string.IsNullOrWhiteSpace(sql))
             {
-                throw new ArgumentNullException("sql");
+                throw new ArgumentNullException(nameof(sql));
             }
 
             HashSet<string> queries;
@@ -59,12 +59,12 @@ namespace EFCache
         {
             if (workspace == null)
             {
-                throw new ArgumentNullException("workspace");
+                throw new ArgumentNullException(nameof(workspace));
             }
 
             if (string.IsNullOrWhiteSpace(sql))
             {
-                throw new ArgumentNullException("sql");
+                throw new ArgumentNullException(nameof(sql));
             }
 
             HashSet<string> queries;

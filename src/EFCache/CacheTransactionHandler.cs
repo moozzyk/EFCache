@@ -62,12 +62,12 @@ namespace EFCache
         {
             if (transaction == null)
             {
-                throw new ArgumentNullException("transaction");
+                throw new ArgumentNullException(nameof(transaction));
             }
 
             if (affectedEntitySets == null)
             {
-                throw new ArgumentNullException("affectedEntitySets");
+                throw new ArgumentNullException(nameof(affectedEntitySets));
             }
 
             var entitySets = _affectedSetsInTransaction.GetOrAdd(transaction, new List<string>());

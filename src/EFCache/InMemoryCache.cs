@@ -15,7 +15,7 @@ namespace EFCache
         {
             if (key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
             }
 
             value = null;
@@ -47,12 +47,12 @@ namespace EFCache
         {
             if (key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
             }
 
             if (dependentEntitySets == null)
             {
-                throw new ArgumentNullException("dependentEntitySets");
+                throw new ArgumentNullException(nameof(dependentEntitySets));
             }
 
             lock (_cache)
@@ -80,7 +80,7 @@ namespace EFCache
         {
             if (entitySets == null)
             {
-                throw new ArgumentNullException("entitySets");
+                throw new ArgumentNullException(nameof(entitySets));
             }
             
             lock (_cache)
@@ -110,7 +110,7 @@ namespace EFCache
         {
             if (key == null)
             {
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
             }
 
             lock (_cache)
