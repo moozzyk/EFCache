@@ -12,7 +12,7 @@ namespace EFCache
         {
             if (context == null)
             {
-                throw new ArgumentNullException("context");
+                throw new ArgumentNullException(nameof(context));
             }
 
             return ((IObjectContextAdapter) context).ObjectContext.GetCachingProviderServices();

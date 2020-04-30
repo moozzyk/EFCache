@@ -20,7 +20,7 @@ namespace EFCache
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             var objectQuery = TryGetObjectQuery(source) ?? source as ObjectQuery;
@@ -45,7 +45,7 @@ namespace EFCache
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
 
             var objectQuery = TryGetObjectQuery(source) ?? source as ObjectQuery;
@@ -57,6 +57,50 @@ namespace EFCache
             }
 
             return source;
+        }
+
+        public static T FirstNotCached<T>(this IQueryable<T> source)
+            where T : class
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            return source.Take(1).NotCached().ToArray().First();
+        }
+
+        public static T FirstOrDefaultNotCached<T>(this IQueryable<T> source)
+            where T : class
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            return source.Take(1).NotCached().ToArray().FirstOrDefault();
+        }
+
+        public static T SingleNotCached<T>(this IQueryable<T> source)
+            where T : class
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            return source.Take(2).NotCached().ToArray().Single();
+        }
+
+        public static T SingleOrDefaultNotCached<T>(this IQueryable<T> source)
+            where T : class
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            return source.Take(2).NotCached().ToArray().SingleOrDefault();
         }
 
         private static ObjectQuery TryGetObjectQuery<T>(IQueryable<T> source)

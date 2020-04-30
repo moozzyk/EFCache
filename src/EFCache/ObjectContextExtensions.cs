@@ -14,7 +14,7 @@ namespace EFCache
         {
             if (context == null)
             {
-                throw new ArgumentNullException("context");
+                throw new ArgumentNullException(nameof(context));
             }
 
             var providerInvariantName =
