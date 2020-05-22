@@ -422,6 +422,19 @@ namespace EFCache
             }
         }
 
+        [Fact]
+        public void GetInt32_converts_numeric_values_for_column()
+        {
+            using (var reader = CreateCachingReader(1))
+            {
+                var result = reader.Read();
+                Assert.True(result);
+
+                Assert.Equal(0, reader.GetInt32(0)); // (int)0
+                Assert.Equal(0, reader.GetInt32(13)); // 0L
+            }
+        }
+
         #endregion
 
         #region GetString
@@ -1192,7 +1205,7 @@ namespace EFCache
         {
             for (var i = 0; i < count; i++)
             {
-                var row = new object[13];
+                var row = new object[14];
                 row[0] = i;
                 row[1] = null;
                 row[2] = i.ToString();
@@ -1206,6 +1219,7 @@ namespace EFCache
                 row[10] = new DateTime(2001, 11, 17);
                 row[11] = (byte)15;
                 row[12] = DBNull.Value;
+                row[13] = 0L;
 
                 yield return row;
             }
