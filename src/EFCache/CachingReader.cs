@@ -137,7 +137,7 @@ namespace EFCache
 
         public override int GetInt32(int ordinal)
         {
-            return (int)GetValue(ordinal);
+            return Convert.ToInt32(GetValue(ordinal));
         }
 
         public override long GetInt64(int ordinal)
