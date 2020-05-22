@@ -280,7 +280,7 @@ namespace EFCache
 
         protected override void Dispose(bool disposing)
         {
-            _command.GetType()
+            _command?.GetType()
                 .GetMethod("Dispose", BindingFlags.Instance | BindingFlags.NonPublic)
                 .Invoke(_command, new object[] { disposing });
         }
