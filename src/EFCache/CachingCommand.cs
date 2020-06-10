@@ -59,18 +59,18 @@ namespace EFCache
                 return _commandTreeFacts.IsQuery &&
                        (IsQueryAlwaysCached ||
                        !_commandTreeFacts.UsesNonDeterministicFunctions &&
-                       !IsQueryBlacklisted &&
+                       !IsQueryBlocked &&
                        _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, CommandText,
                            Parameters.Cast<DbParameter>()
                                .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value))));
             }
         }
 
-        private bool IsQueryBlacklisted
+        private bool IsQueryBlocked
         {
             get
             {
-                return BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                return BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                     _commandTreeFacts.MetadataWorkspace, CommandText);
             }
         }

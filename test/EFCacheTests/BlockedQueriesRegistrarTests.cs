@@ -6,93 +6,93 @@ namespace EFCache
     using System.Data.Entity.Core.Metadata.Edm;
     using Xunit;
 
-    public class BlacklistedQueriesRegistrarTests
+    public class BlockedQueriesRegistrarTests
     {
         [Fact]
-        public void Can_add_query_to_blacklisted_queries()
+        public void Can_add_query_to_blocked_queries()
         {
             var workspace = new MetadataWorkspace();
 
-            BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(workspace, "A");
-            Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(workspace, "A"));
+            BlockedQueriesRegistrar.Instance.AddBlockedQuery(workspace, "A");
+            Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(workspace, "A"));
         }
 
         [Fact]
-        public void Can_remove_query_from_blacklisted_queries()
+        public void Can_remove_query_from_blocked_queries()
         {
             var workspace = new MetadataWorkspace();
 
-            BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(workspace, "A");
-            Assert.True(BlacklistedQueriesRegistrar.Instance.RemoveBlacklistedQuery(workspace, "A"));
-            Assert.False(BlacklistedQueriesRegistrar.Instance.RemoveBlacklistedQuery(workspace, "A"));
+            BlockedQueriesRegistrar.Instance.AddBlockedQuery(workspace, "A");
+            Assert.True(BlockedQueriesRegistrar.Instance.RemoveBlockedQuery(workspace, "A"));
+            Assert.False(BlockedQueriesRegistrar.Instance.RemoveBlockedQuery(workspace, "A"));
         }
 
         [Fact]
-        public void AddBlackListedQuery_checks_parameters()
+        public void AddBlockedQuery_checks_parameters()
         {
             Assert.Equal("workspace",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(null, "A")).ParamName);
+                    () => BlockedQueriesRegistrar.Instance.AddBlockedQuery(null, "A")).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(
+                    () => BlockedQueriesRegistrar.Instance.AddBlockedQuery(
                         new MetadataWorkspace(), null)).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(
+                    () => BlockedQueriesRegistrar.Instance.AddBlockedQuery(
                         new MetadataWorkspace(), string.Empty)).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(
+                    () => BlockedQueriesRegistrar.Instance.AddBlockedQuery(
                         new MetadataWorkspace(), " ")).ParamName);
         }
 
         [Fact]
-        public void RemoveBlackListedQuery_checks_parameters()
+        public void RemoveBlockedQuery_checks_parameters()
         {
             Assert.Equal("workspace",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.RemoveBlacklistedQuery(null, "A")).ParamName);
+                    () => BlockedQueriesRegistrar.Instance.RemoveBlockedQuery(null, "A")).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.RemoveBlacklistedQuery(
+                    () => BlockedQueriesRegistrar.Instance.RemoveBlockedQuery(
                         new MetadataWorkspace(), null)).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.RemoveBlacklistedQuery(
+                    () => BlockedQueriesRegistrar.Instance.RemoveBlockedQuery(
                         new MetadataWorkspace(), string.Empty)).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.RemoveBlacklistedQuery(
+                    () => BlockedQueriesRegistrar.Instance.RemoveBlockedQuery(
                         new MetadataWorkspace(), " ")).ParamName);
         }
 
         [Fact]
-        public void IsQueryBlacklisted_checks_parameters()
+        public void IsQueryBlocked_checks_parameters()
         {
             Assert.Equal("workspace",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(null, "A")).ParamName);
+                    () => BlockedQueriesRegistrar.Instance.IsQueryBlocked(null, "A")).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    () => BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                         new MetadataWorkspace(), null)).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    () => BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                         new MetadataWorkspace(), string.Empty)).ParamName);
 
             Assert.Equal("sql",
                 Assert.Throws<ArgumentNullException>(
-                    () => BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                    () => BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                         new MetadataWorkspace(), " ")).ParamName);
         }
     }

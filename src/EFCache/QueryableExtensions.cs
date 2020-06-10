@@ -27,7 +27,7 @@ namespace EFCache
 
             if (objectQuery != null)
             {
-                BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(
+                BlockedQueriesRegistrar.Instance.AddBlockedQuery(
                     objectQuery.Context.MetadataWorkspace, objectQuery.ToTraceString());
             }
 
@@ -35,7 +35,7 @@ namespace EFCache
         }
 
         /// <summary>
-        /// Forces query results to be always cached. Overrides caching policy settings and blacklisted queries.
+        /// Forces query results to be always cached. Overrides caching policy settings and blocked queries.
         /// Allows caching results for queries using non-deterministic functions.
         /// </summary>
         /// <typeparam name="T">Query element type.</typeparam>

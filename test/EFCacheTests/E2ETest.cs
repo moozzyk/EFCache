@@ -193,12 +193,12 @@ namespace EFCache
         [Fact]
         public void Cache_cleared_on_implicit_transaction_commit()
         {
-            Cache.PutItem("s", new object(), new[] {"Item", "Entity"}, new TimeSpan(), new DateTime());
+            Cache.PutItem("s", new object(), new[] { "Item", "Entity" }, new TimeSpan(), new DateTime());
 
             using (var ctx = new MyContext())
             {
                 ctx.Entities.Add(new Entity());
-                ctx.Items.Add(new Item { Id = Guid.NewGuid()});
+                ctx.Items.Add(new Item { Id = Guid.NewGuid() });
 
                 ctx.SaveChanges();
 
@@ -265,7 +265,7 @@ namespace EFCache
 
             using (var ctx = new MyContext())
             {
-                using(var entityConnection = ((IObjectContextAdapter)ctx).ObjectContext.Connection)
+                using (var entityConnection = ((IObjectContextAdapter)ctx).ObjectContext.Connection)
                 {
                     entityConnection.Open();
                     var trx = entityConnection.BeginTransaction();
@@ -307,7 +307,7 @@ namespace EFCache
         {
             using (var ctx = new MyContext())
             {
-                Assert.NotNull(((IObjectContextAdapter) ctx).ObjectContext.GetCachingProviderServices());
+                Assert.NotNull(((IObjectContextAdapter)ctx).ObjectContext.GetCachingProviderServices());
             }
         }
 
@@ -360,7 +360,7 @@ namespace EFCache
             using (var ctx = new MyContext())
             {
                 var q = ctx.Entities.Where(e => e.Flag != null).OrderBy(e => e.Id).NotCached();
-                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q.ToString()));
                 q.ToList();
                 Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q.ToString()));
@@ -376,12 +376,12 @@ namespace EFCache
                 ctx.SaveChanges();
 
                 var e = ctx.Entities.FirstNotCached();
-                var q = @"SELECT TOP (1) 
-    [c].[Id] AS [Id], 
-    [c].[Name] AS [Name], 
+                var q = @"SELECT TOP (1)
+    [c].[Id] AS [Id],
+    [c].[Name] AS [Name],
     [c].[Flag] AS [Flag]
     FROM [dbo].[Entities] AS [c]";
-                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q));
 
                 Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q));
@@ -394,14 +394,14 @@ namespace EFCache
             using (var ctx = new MyContext())
             {
                 var e = ctx.Entities.FirstOrDefaultNotCached();
-                var q = @"SELECT TOP (1) 
-    [c].[Id] AS [Id], 
-    [c].[Name] AS [Name], 
+                var q = @"SELECT TOP (1)
+    [c].[Id] AS [Id],
+    [c].[Name] AS [Name],
     [c].[Flag] AS [Flag]
     FROM [dbo].[Entities] AS [c]";
-                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q));
-                
+
                 Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q));
             }
         }
@@ -415,12 +415,12 @@ namespace EFCache
                 ctx.SaveChanges();
 
                 var e = ctx.Entities.SingleNotCached();
-                var q = @"SELECT TOP (2) 
-    [c].[Id] AS [Id], 
-    [c].[Name] AS [Name], 
+                var q = @"SELECT TOP (2)
+    [c].[Id] AS [Id],
+    [c].[Name] AS [Name],
     [c].[Flag] AS [Flag]
     FROM [dbo].[Entities] AS [c]";
-                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q));
 
                 Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q));
@@ -433,12 +433,12 @@ namespace EFCache
             using (var ctx = new MyContext())
             {
                 var e = ctx.Entities.SingleOrDefaultNotCached();
-                var q = @"SELECT TOP (2) 
-    [c].[Id] AS [Id], 
-    [c].[Name] AS [Name], 
+                var q = @"SELECT TOP (2)
+    [c].[Id] AS [Id],
+    [c].[Name] AS [Name],
     [c].[Flag] AS [Flag]
     FROM [dbo].[Entities] AS [c]";
-                Assert.True(BlacklistedQueriesRegistrar.Instance.IsQueryBlacklisted(
+                Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, q));
 
                 Assert.DoesNotContain(Cache.CacheDictionary.Keys, k => k.Contains(q));
@@ -446,19 +446,19 @@ namespace EFCache
         }
 
         [Fact]
-        public void Can_manually_add_query_to_blacklisted_queries()
+        public void Can_manually_add_query_to_blocked_queries()
         {
             using (var ctx = new MyContext())
             {
-                const string query = @"SELECT 
+                const string query = @"SELECT
     [GroupBy1].[A1] AS [C1]
-    FROM ( SELECT 
+    FROM ( SELECT
         COUNT(1) AS [A1]
         FROM [dbo].[Entities] AS [Extent1]
         WHERE [Extent1].[Flag] IS NOT NULL
     )  AS [GroupBy1]";
 
-                BlacklistedQueriesRegistrar.Instance.AddBlacklistedQuery(
+                BlockedQueriesRegistrar.Instance.AddBlockedQuery(
                     ((IObjectContextAdapter)ctx).ObjectContext.MetadataWorkspace, query);
 
                 ctx.Entities.Count(e => e.Flag != null);
@@ -467,7 +467,7 @@ namespace EFCache
         }
 
         [Fact]
-        public void Query_results_cached_even_if_Cached_used_on_blacklisted_query()
+        public void Query_results_cached_even_if_Cached_used_on_blocked_query()
         {
             using (var ctx = new MyContext())
             {

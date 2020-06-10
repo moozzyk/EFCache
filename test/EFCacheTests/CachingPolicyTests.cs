@@ -10,7 +10,7 @@ namespace EFCache
     public class CachingPolicyTests
     {
         [Fact]
-        public void CanBeCached_returns_true_for_non_blacklisted_queries()
+        public void CanBeCached_returns_true_for_non_blocked_queries()
         {
             Assert.True(new CachingPolicy().CanBeCached(new List<EntitySetBase>().AsReadOnly(), "A", null));
         }
@@ -21,8 +21,8 @@ namespace EFCache
             // table takes precedence override name
             var entitySets = TestUtils.CreateEntitySetsEx(
                 new[] { "tbl1", "t", "XY" },
-                new[] { "dbo", "dbo", null},
-                new[] { null, "aaa" , "ttt" });
+                new[] { "dbo", "dbo", null },
+                new[] { null, "aaa", "ttt" });
 
             Assert.True(new CachingPolicy(new[] { "dbo.aaa", "dbo.tbl1", "ccc", "ttt" })
                 .CanBeCached(entitySets, "A", null));
