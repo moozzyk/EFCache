@@ -376,9 +376,9 @@ namespace EFCache
                 ctx.SaveChanges();
 
                 var e = ctx.Entities.FirstNotCached();
-                var q = @"SELECT TOP (1)
-    [c].[Id] AS [Id],
-    [c].[Name] AS [Name],
+                var q = @"SELECT TOP (1) 
+    [c].[Id] AS [Id], 
+    [c].[Name] AS [Name], 
     [c].[Flag] AS [Flag]
     FROM [dbo].[Entities] AS [c]";
                 Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
@@ -394,9 +394,9 @@ namespace EFCache
             using (var ctx = new MyContext())
             {
                 var e = ctx.Entities.FirstOrDefaultNotCached();
-                var q = @"SELECT TOP (1)
-    [c].[Id] AS [Id],
-    [c].[Name] AS [Name],
+                var q = @"SELECT TOP (1) 
+    [c].[Id] AS [Id], 
+    [c].[Name] AS [Name], 
     [c].[Flag] AS [Flag]
     FROM [dbo].[Entities] AS [c]";
                 Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
@@ -415,9 +415,9 @@ namespace EFCache
                 ctx.SaveChanges();
 
                 var e = ctx.Entities.SingleNotCached();
-                var q = @"SELECT TOP (2)
-    [c].[Id] AS [Id],
-    [c].[Name] AS [Name],
+                var q = @"SELECT TOP (2) 
+    [c].[Id] AS [Id], 
+    [c].[Name] AS [Name], 
     [c].[Flag] AS [Flag]
     FROM [dbo].[Entities] AS [c]";
                 Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
@@ -433,9 +433,9 @@ namespace EFCache
             using (var ctx = new MyContext())
             {
                 var e = ctx.Entities.SingleOrDefaultNotCached();
-                var q = @"SELECT TOP (2)
-    [c].[Id] AS [Id],
-    [c].[Name] AS [Name],
+                var q = @"SELECT TOP (2) 
+    [c].[Id] AS [Id], 
+    [c].[Name] AS [Name], 
     [c].[Flag] AS [Flag]
     FROM [dbo].[Entities] AS [c]";
                 Assert.True(BlockedQueriesRegistrar.Instance.IsQueryBlocked(
