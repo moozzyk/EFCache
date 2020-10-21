@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
 
+using System.Runtime.Serialization;
+
 namespace EFCache
 {
     using System;
 
     [Serializable]
-    internal struct ColumnMetadata
+    internal struct ColumnMetadata : ISerializable
     {
         private readonly string _name;
         private readonly string _dataTypeName;
@@ -16,6 +18,14 @@ namespace EFCache
             _name = name;
             _dataTypeName = dataTypeName;
             _dataType = dataType;
+        }
+
+        public ColumnMetadata(SerializationInfo info, StreamingContext context)
+        {
+            // Reset the property value using the GetValue method.
+            _name = (string) info.GetValue("name", typeof(string));
+            _dataTypeName = (string) info.GetValue("datatypename", typeof(string));
+            _dataType = Type.GetType((string) info.GetValue("datatype", typeof(string)));
         }
 
         public string Name
@@ -31,6 +41,13 @@ namespace EFCache
         public Type DataType
         {
             get { return _dataType; }
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("datatypename", _dataTypeName);
+            info.AddValue("datatype", DataType.FullName);
+            info.AddValue("name", Name);
         }
     }
 }
