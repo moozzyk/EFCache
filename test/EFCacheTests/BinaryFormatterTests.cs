@@ -1,17 +1,17 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using Xunit;
-
-namespace EFCache
+﻿namespace EFCache
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Runtime.Serialization.Formatters.Binary;
+    using Xunit;
+
     public class BinaryFormatterTests
     {
         [Fact]
         public void CachedResults_binary_formatter_can_serialize()
         {
-            var tableMetadata = new ColumnMetadata[]
+            var tableMetadata = new[]
             {
                 new ColumnMetadata("age", "int", typeof(System.Int32))
             };
@@ -28,6 +28,7 @@ namespace EFCache
                 Assert.Equal(1, deserialized.RecordsAffected);
                 Assert.Equal("age", deserialized.TableMetadata.Single().Name);
                 Assert.Equal("int", deserialized.TableMetadata.Single().DataTypeName);
+                Assert.Equal(typeof(System.Int32), deserialized.TableMetadata.Single().DataType);
                 Assert.Equal(105, deserialized.Results[0][0]);
             }
         }
