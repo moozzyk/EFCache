@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Pawel Kadluczka, Inc. All rights reserved. See License.txt in the project root for license information.
-
-using System.Runtime.Serialization;
-
 namespace EFCache
 {
     using System;
+    using System.Runtime.Serialization;
 
     [Serializable]
     internal struct ColumnMetadata : ISerializable
