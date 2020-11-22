@@ -186,12 +186,14 @@ namespace EFCache
                 .Setup<ICache>("ResolveCache", ItExpr.IsAny<DbConnection>())
                 .Returns(Mock.Of<ICache>());
             var dbConnection = Mock.Of<DbConnection>();
+            var interceptionContext = new DbTransactionInterceptionContext().WithConnection(dbConnection);
             var mockTransaction = new Mock<DbTransaction>();
             mockTransaction.Protected().SetupGet<DbConnection>("DbConnection").Returns(dbConnection);
             var entitySets = new[] { "ES1" };
 
             mockTransactionHandler.Object.InvalidateSets(mockTransaction.Object, entitySets, dbConnection);
-            mockTransactionHandler.Object.Committed(mockTransaction.Object, Mock.Of<DbTransactionInterceptionContext>());
+            mockTransaction.Protected().SetupGet<DbConnection>("DbConnection").Returns((DbConnection)null);
+            mockTransactionHandler.Object.Committed(mockTransaction.Object, interceptionContext);
 
             mockTransactionHandler.Protected()
                 .Verify("ResolveCache", Times.Once(), dbConnection);
