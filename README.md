@@ -1,6 +1,6 @@
-# Second Level Cache for Entity Framework 6.1
+# Second Level Cache for Entity Framework 6.1+
 
-Entity Framework does not currently support caching of query results. A sample EF Caching provider is available for Entity Framework version 5 and earlier but due to changes to the provider model this sample provider does not work with Entity Framework 6 and newer. This project is filling the gap by enabling caching of query results for Entity Framework 6.1 applications. 
+Entity Framework does not currently support caching of query results. A sample EF Caching provider is available for Entity Framework version 5 and earlier but due to changes to the provider model this sample provider does not work with Entity Framework 6 and newer. This project is filling the gap by enabling caching of query results for Entity Framework 6.1+ applications. 
 
 #### This project was moved from https://efcache.codeplex.com
 
