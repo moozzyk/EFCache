@@ -18,8 +18,13 @@ namespace EFCache
         private readonly CommandTreeFacts _commandTreeFacts;
         private readonly CacheTransactionHandler _cacheTransactionHandler;
         private readonly CachingPolicy _cachingPolicy;
+        private readonly CachingCommandStrategyFactory _cachingCommandStrategyFactory;
+        private readonly ICachingCommandStrategy _cachingCommandStrategy;
 
-        public CachingCommand(DbCommand command, CommandTreeFacts commandTreeFacts, CacheTransactionHandler cacheTransactionHandler, CachingPolicy cachingPolicy)
+        public CachingCommand(DbCommand command, 
+            CommandTreeFacts commandTreeFacts, 
+            CacheTransactionHandler cacheTransactionHandler,
+            CachingPolicy cachingPolicy)
         {
             Debug.Assert(command != null, "command is null");
             Debug.Assert(commandTreeFacts != null, "commandTreeFacts is null");
@@ -30,6 +35,24 @@ namespace EFCache
             _commandTreeFacts = commandTreeFacts;
             _cacheTransactionHandler = cacheTransactionHandler;
             _cachingPolicy = cachingPolicy;
+            _cachingCommandStrategyFactory = DefaultCachingCommandFactory.Create;
+            _cachingCommandStrategy = _cachingCommandStrategyFactory(_cachingPolicy,
+                _commandTreeFacts,
+                _cacheTransactionHandler,
+                _command);
+        }
+
+        public CachingCommand(DbCommand command,
+            CommandTreeFacts commandTreeFacts,
+            CacheTransactionHandler cacheTransactionHandler,
+            CachingPolicy cachingPolicy,
+            CachingCommandStrategyFactory cachingCommandStrategyFactory) : this(command, commandTreeFacts, cacheTransactionHandler, cachingPolicy)
+        {
+            _cachingCommandStrategyFactory = cachingCommandStrategyFactory;
+            _cachingCommandStrategy = _cachingCommandStrategyFactory(_cachingPolicy,
+                _commandTreeFacts,
+                _cacheTransactionHandler,
+                _command);
         }
 
         internal CommandTreeFacts CommandTreeFacts
@@ -50,38 +73,6 @@ namespace EFCache
         internal DbCommand WrappedCommand
         {
             get { return _command; }
-        }
-
-        private bool IsCacheable
-        {
-            get
-            {
-                return _commandTreeFacts.IsQuery &&
-                       (IsQueryAlwaysCached ||
-                       !_commandTreeFacts.UsesNonDeterministicFunctions &&
-                       !IsQueryBlocked &&
-                       _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, CommandText,
-                           Parameters.Cast<DbParameter>()
-                               .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value))));
-            }
-        }
-
-        private bool IsQueryBlocked
-        {
-            get
-            {
-                return BlockedQueriesRegistrar.Instance.IsQueryBlocked(
-                    _commandTreeFacts.MetadataWorkspace, CommandText);
-            }
-        }
-
-        private bool IsQueryAlwaysCached
-        {
-            get
-            {
-                return AlwaysCachedQueriesRegistrar.Instance.IsQueryCached(
-                    _commandTreeFacts.MetadataWorkspace, CommandText);
-            }
         }
 
         public override void Cancel()
@@ -173,110 +164,58 @@ namespace EFCache
 
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
-            if (!IsCacheable)
+            if (!_cachingCommandStrategy.IsCacheable())
             {
                 var result = _command.ExecuteReader(behavior);
-
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                        DbConnection);
+                    _cachingCommandStrategy.InvalidateSets(result.RecordsAffected);
                 }
 
                 return result;
             }
+            
+            var key = _cachingCommandStrategy.CreateKey();
 
-            var key = CreateKey();
-
-            object value;
-            if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
+            if (_cachingCommandStrategy.GetCachedDbDataReader(key, out DbDataReader cachedReader))
             {
-                return new CachingReader((CachedResults)value);
+                return cachedReader;
             }
-
+            
             using (var reader = _command.ExecuteReader(behavior))
             {
-                var queryResults = new List<object[]>();
-
-                while (reader.Read())
-                {
-                    var values = new object[reader.FieldCount];
-                    reader.GetValues(values);
-                    queryResults.Add(values);
-                }
-
-                return HandleCaching(reader, key, queryResults);
+                return _cachingCommandStrategy.SetCacheFromDbDataReader(key, reader);
             }
         }
 
 #if !NET40
         protected async override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
         {
-            if (!IsCacheable)
+            if (!_cachingCommandStrategy.IsCacheable())
             {
                 var result = await _command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
 
                 if (!_commandTreeFacts.IsQuery)
                 {
-                    _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name), DbConnection);
+                    _cachingCommandStrategy.InvalidateSets(result.RecordsAffected);
                 }
 
                 return result;
             }
 
-            var key = CreateKey();
-
-            object value;
-            if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
+            var key = _cachingCommandStrategy.CreateKey();
+            
+            if (_cachingCommandStrategy.GetCachedDbDataReader(key, out DbDataReader cachedReader))
             {
-                return new CachingReader((CachedResults)value);
+                return cachedReader;
             }
 
             using (var reader = await _command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false))
             {
-                var queryResults = new List<object[]>();
-
-                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    var values = new object[reader.FieldCount];
-                    reader.GetValues(values);
-                    queryResults.Add(values);
-                }
-
-                return HandleCaching(reader, key, queryResults);
+                return await _cachingCommandStrategy.SetCacheFromDbDataReaderAsync(key, reader, cancellationToken);
             }
         }
 #endif
-
-        private DbDataReader HandleCaching(DbDataReader reader, string key, List<object[]> queryResults)
-        {
-            var cachedResults =
-                new CachedResults(
-                    GetTableMetadata(reader), queryResults, reader.RecordsAffected);
-
-            int minCacheableRows, maxCachableRows;
-            _cachingPolicy.GetCacheableRows(_commandTreeFacts.AffectedEntitySets, out minCacheableRows,
-                out maxCachableRows);
-
-            if (IsQueryAlwaysCached || (queryResults.Count >= minCacheableRows && queryResults.Count <= maxCachableRows))
-            {
-                TimeSpan slidingExpiration;
-                DateTimeOffset absoluteExpiration;
-                _cachingPolicy.GetExpirationTimeout(_commandTreeFacts.AffectedEntitySets, out slidingExpiration,
-                    out absoluteExpiration);
-
-                _cacheTransactionHandler.PutItem(
-                    Transaction,
-                    key,
-                    cachedResults,
-                    _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                    slidingExpiration,
-                    absoluteExpiration,
-                    DbConnection);
-            }
-
-            return new CachingReader(cachedResults);
-        }
 
         protected override void Dispose(bool disposing)
         {
@@ -285,25 +224,11 @@ namespace EFCache
                 .Invoke(_command, new object[] { disposing });
         }
 
-        private static ColumnMetadata[] GetTableMetadata(DbDataReader reader)
-        {
-            var columnMetadata = new ColumnMetadata[reader.FieldCount];
-
-            for (var i = 0; i < reader.FieldCount; i++)
-            {
-                columnMetadata[i] =
-                    new ColumnMetadata(
-                        reader.GetName(i), reader.GetDataTypeName(i), reader.GetFieldType(i));
-            }
-
-            return columnMetadata;
-        }
-
         public override int ExecuteNonQuery()
         {
             var recordsAffected = _command.ExecuteNonQuery();
 
-            InvalidateSetsForNonQuery(recordsAffected);
+            _cachingCommandStrategy.InvalidateSets(recordsAffected);
 
             return recordsAffected;
         }
@@ -313,86 +238,51 @@ namespace EFCache
         {
             var recordsAffected = await _command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
-            InvalidateSetsForNonQuery(recordsAffected);
+            _cachingCommandStrategy.InvalidateSets(recordsAffected);
 
             return recordsAffected;
         }
 #endif
 
-        private void InvalidateSetsForNonQuery(int recordsAffected)
-        {
-            if (recordsAffected > 0 && _commandTreeFacts.AffectedEntitySets.Any())
-            {
-                _cacheTransactionHandler.InvalidateSets(Transaction, _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                    DbConnection);
-            }
-        }
-
         public override object ExecuteScalar()
         {
-            if (!IsCacheable)
+            if (!_cachingCommandStrategy.IsCacheable())
             {
                 return _command.ExecuteScalar();
             }
 
-            var key = CreateKey();
+            var key = _cachingCommandStrategy.CreateKey();
 
-            object value;
-
-            if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
+            if (_cachingCommandStrategy.GetCachedScalarObject(key, out object cachedObject))
             {
-                return value;
+                return cachedObject;
             }
+            
+            var value = _command.ExecuteScalar();
 
-            value = _command.ExecuteScalar();
-
-            TimeSpan slidingExpiration;
-            DateTimeOffset absoluteExpiration;
-            _cachingPolicy.GetExpirationTimeout(_commandTreeFacts.AffectedEntitySets, out slidingExpiration, out absoluteExpiration);
-
-            _cacheTransactionHandler.PutItem(
-                Transaction,
-                key,
-                value,
-                _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                slidingExpiration,
-                absoluteExpiration,
-                DbConnection);
-
+            _cachingCommandStrategy.SetCacheFromScalarObject(key, value);
+            
             return value;
         }
 
 #if !NET40
         public async override Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
         {
-            if (!IsCacheable)
+            if (!_cachingCommandStrategy.IsCacheable())
             {
                 return await _command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            var key = CreateKey();
+            var key = _cachingCommandStrategy.CreateKey();
 
-            object value;
-
-            if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
+            if (_cachingCommandStrategy.GetCachedScalarObject(key, out object cachedObject))
             {
-                return value;
+                return cachedObject;
             }
 
-            value = await _command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+            var value = await _command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 
-            TimeSpan slidingExpiration;
-            DateTimeOffset absoluteExpiration;
-            _cachingPolicy.GetExpirationTimeout(_commandTreeFacts.AffectedEntitySets, out slidingExpiration, out absoluteExpiration);
-
-            _cacheTransactionHandler.PutItem(
-                Transaction,
-                key,
-                value,
-                _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                slidingExpiration,
-                absoluteExpiration,
-                DbConnection);
+            _cachingCommandStrategy.SetCacheFromScalarObject(key, value);
 
             return value;
         }
@@ -415,19 +305,6 @@ namespace EFCache
             }
         }
 
-        private string CreateKey()
-        {
-            return
-                string.Format(
-                "{0}_{1}_{2}",
-                Connection.Database,
-                CommandText,
-                string.Join(
-                    "_",
-                    Parameters.Cast<DbParameter>()
-                    .Select(p => string.Format("{0}={1}", p.ParameterName, p.Value))));
-        }
-
         public object Clone()
         {
             var cloneableCommand = _command as ICloneable;
@@ -437,7 +314,7 @@ namespace EFCache
             }
 
             var clonedCommand = (DbCommand)cloneableCommand.Clone();
-            return new CachingCommand(clonedCommand, _commandTreeFacts, _cacheTransactionHandler, _cachingPolicy);
+            return new CachingCommand(clonedCommand, _commandTreeFacts, _cacheTransactionHandler, _cachingPolicy, _cachingCommandStrategyFactory);
         }
     }
 }

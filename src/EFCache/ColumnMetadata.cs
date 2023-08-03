@@ -5,7 +5,7 @@ namespace EFCache
     using System.Runtime.Serialization;
 
     [Serializable]
-    internal struct ColumnMetadata : ISerializable
+    public struct ColumnMetadata : ISerializable
     {
         private readonly string _name;
         private readonly string _dataTypeName;
