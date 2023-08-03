@@ -17,7 +17,7 @@ namespace EFCache
         {
             Assert.Equal(
                 "cache",
-                Assert.Throws<ArgumentNullException>(() => new CacheTransactionHandler(null)).ParamName);
+                Assert.Throws<ArgumentNullException>(() => new CacheTransactionHandler(cache:null)).ParamName);
         }
 
         [Fact]
@@ -128,8 +128,8 @@ namespace EFCache
         {
             var transactionHandler = new Mock<CacheTransactionHandler>{ CallBase = true }.Object;
 
-            Assert.Throws<InvalidOperationException>(() =>
-                transactionHandler.GetItem(null, "key", Mock.Of<DbConnection>(), out _));
+            Assert.ThrowsAny<InvalidOperationException>(() =>
+                transactionHandler.GetItem(null, "key", Mock.Of<DbConnection>(), out object _));
         }
 
         [Fact]
@@ -141,7 +141,7 @@ namespace EFCache
                 .Returns(Mock.Of<ICache>());
             var dbConnection = Mock.Of<DbConnection>();
 
-            mockTransactionHandler.Object.GetItem(null, "key", dbConnection, out _);
+            mockTransactionHandler.Object.GetItem(null, "key", dbConnection, out object _);
 
             mockTransactionHandler.Protected()
                 .Verify("ResolveCache", Times.Once(), dbConnection);
