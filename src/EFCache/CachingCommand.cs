@@ -188,10 +188,10 @@ namespace EFCache
 
             var key = CreateKey();
 
-            object value;
+            CachedResults value;
             if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
             {
-                return new CachingReader((CachedResults)value);
+                return new CachingReader(value);
             }
 
             using (var reader = _command.ExecuteReader(behavior))
@@ -226,10 +226,10 @@ namespace EFCache
 
             var key = CreateKey();
 
-            object value;
+            CachedResults value;
             if (_cacheTransactionHandler.GetItem(Transaction, key, DbConnection, out value))
             {
-                return new CachingReader((CachedResults)value);
+                return new CachingReader(value);
             }
 
             using (var reader = await _command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false))
