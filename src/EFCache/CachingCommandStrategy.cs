@@ -29,7 +29,7 @@ namespace EFCache
         protected readonly CachingPolicy _cachingPolicy;
         protected readonly ICommandTreeFacts _commandTreeFacts;
         protected readonly CacheTransactionHandler _cacheTransactionHandler;
-        protected readonly ICachingCommandMetadata _command;
+        protected readonly ICachingCommandMetadata _commandMetadata;
 
         public CachingCommandStrategy(CachingPolicy cachingPolicy,
             ICommandTreeFacts commandTreeFacts,
@@ -39,19 +39,19 @@ namespace EFCache
             _cachingPolicy = cachingPolicy;
             _commandTreeFacts = commandTreeFacts;
             _cacheTransactionHandler = cacheTransactionHandler;
-            _command = commandMetadata;
+            _commandMetadata = commandMetadata;
         }
 
         protected virtual bool IsQueryAlwaysCached()
         {
             return AlwaysCachedQueriesRegistrar.Instance.IsQueryCached(
-                _commandTreeFacts.MetadataWorkspace, _command.CommandText);
+                _commandTreeFacts.MetadataWorkspace, _commandMetadata.CommandText);
         }
 
         protected virtual bool IsQueryBlocked()
         {
             return BlockedQueriesRegistrar.Instance.IsQueryBlocked(
-                _commandTreeFacts.MetadataWorkspace, _command.CommandText);
+                _commandTreeFacts.MetadataWorkspace, _commandMetadata.CommandText);
         }
 
         public virtual bool IsCacheable()
@@ -60,8 +60,8 @@ namespace EFCache
                    (IsQueryAlwaysCached() ||
                     !_commandTreeFacts.UsesNonDeterministicFunctions &&
                     !IsQueryBlocked() &&
-                    _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, _command.CommandText,
-                        _command.Parameters.Cast<DbParameter>()
+                    _cachingPolicy.CanBeCached(_commandTreeFacts.AffectedEntitySets, _commandMetadata.CommandText,
+                        _commandMetadata.Parameters.Cast<DbParameter>()
                             .Select(p => new KeyValuePair<string, object>(p.ParameterName, p.Value))));
         }
 
@@ -70,18 +70,18 @@ namespace EFCache
             return
                 string.Format(
                     "{0}_{1}_{2}",
-                    _command.Connection.Database,
-                    _command.CommandText,
+                    _commandMetadata.Connection.Database,
+                    _commandMetadata.CommandText,
                     string.Join(
                         "_",
-                        _command.Parameters.Cast<DbParameter>()
+                        _commandMetadata.Parameters.Cast<DbParameter>()
                             .Select(p => string.Format("{0}={1}", p.ParameterName, p.Value))));
         }
 
         public virtual bool GetCachedDbDataReader(string key, out DbDataReader dbDataReader)
         {
             CachedResults value;
-            if (_cacheTransactionHandler.GetItem(_command.Transaction, key, _command.Connection, out value))
+            if (_cacheTransactionHandler.GetItem(_commandMetadata.Transaction, key, _commandMetadata.Connection, out value))
             {
                 dbDataReader = CreateDataReaderFromCachedResults(value);
                 return true;
@@ -164,13 +164,13 @@ namespace EFCache
                 out absoluteExpiration);
 
             _cacheTransactionHandler.PutItem(
-                _command.Transaction,
+                _commandMetadata.Transaction,
                 key,
                 cachedResults,
                 _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
                 slidingExpiration,
                 absoluteExpiration,
-                _command.Connection);
+                _commandMetadata.Connection);
         }
 
         private ColumnMetadata[] GetTableMetadata(DbDataReader reader)
@@ -189,7 +189,7 @@ namespace EFCache
 
         public virtual bool GetCachedScalarObject(string key, out object cachedObject)
         {
-            return _cacheTransactionHandler.GetItem(_command.Transaction, key, _command.Connection, out cachedObject);
+            return _cacheTransactionHandler.GetItem(_commandMetadata.Transaction, key, _commandMetadata.Connection, out cachedObject);
         }
 
         public virtual void SetCacheFromScalarObject(string key, object value)
@@ -201,9 +201,9 @@ namespace EFCache
         {
             if (recordsAffected > 0 && _commandTreeFacts.AffectedEntitySets.Any())
             {
-                _cacheTransactionHandler.InvalidateSets(_command.Transaction, 
+                _cacheTransactionHandler.InvalidateSets(_commandMetadata.Transaction, 
                     _commandTreeFacts.AffectedEntitySets.Select(s => s.Name),
-                    _command.Connection);
+                    _commandMetadata.Connection);
             }
         }
     }
