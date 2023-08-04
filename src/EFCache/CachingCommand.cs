@@ -12,7 +12,7 @@ namespace EFCache
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class CachingCommand : DbCommand, ICloneable
+    internal class CachingCommand : DbCommand, ICloneable, ICachingCommandMetadata
     {
         private readonly DbCommand _command;
         private readonly CommandTreeFacts _commandTreeFacts;
@@ -39,7 +39,7 @@ namespace EFCache
             _cachingCommandStrategy = _cachingCommandStrategyFactory(_cachingPolicy,
                 _commandTreeFacts,
                 _cacheTransactionHandler,
-                _command);
+                this);
         }
 
         public CachingCommand(DbCommand command,
@@ -52,7 +52,7 @@ namespace EFCache
             _cachingCommandStrategy = _cachingCommandStrategyFactory(_cachingPolicy,
                 _commandTreeFacts,
                 _cacheTransactionHandler,
-                _command);
+                this);
         }
 
         internal CommandTreeFacts CommandTreeFacts

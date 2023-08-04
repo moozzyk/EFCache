@@ -11,16 +11,16 @@ namespace EFCache
     public delegate ICachingCommandStrategy CachingCommandStrategyFactory(CachingPolicy cachingPolicy,
         ICommandTreeFacts commandTreeFacts,
         CacheTransactionHandler cacheTransactionHandler,
-        DbCommand command);
+        ICachingCommandMetadata commandMetadata);
 
     public static class DefaultCachingCommandFactory
     {
         public static ICachingCommandStrategy Create(CachingPolicy cachingPolicy,
             ICommandTreeFacts commandTreeFacts,
             CacheTransactionHandler cacheTransactionHandler,
-            DbCommand command)
+            ICachingCommandMetadata commandMetadata)
         {
-            return new CachingCommandStrategy(cachingPolicy, commandTreeFacts, cacheTransactionHandler, command);
+            return new CachingCommandStrategy(cachingPolicy, commandTreeFacts, cacheTransactionHandler, commandMetadata);
         }
     }
 
@@ -29,17 +29,17 @@ namespace EFCache
         protected readonly CachingPolicy _cachingPolicy;
         protected readonly ICommandTreeFacts _commandTreeFacts;
         protected readonly CacheTransactionHandler _cacheTransactionHandler;
-        protected readonly DbCommand _command;
+        protected readonly ICachingCommandMetadata _command;
 
         public CachingCommandStrategy(CachingPolicy cachingPolicy,
             ICommandTreeFacts commandTreeFacts,
             CacheTransactionHandler cacheTransactionHandler,
-            DbCommand command)
+            ICachingCommandMetadata commandMetadata)
         {
             _cachingPolicy = cachingPolicy;
             _commandTreeFacts = commandTreeFacts;
             _cacheTransactionHandler = cacheTransactionHandler;
-            _command = command;
+            _command = commandMetadata;
         }
 
         protected virtual bool IsQueryAlwaysCached()
