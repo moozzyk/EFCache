@@ -15,7 +15,7 @@ You can get it from NuGet - just install the [EntityFramework.Cache NuGet packag
 
 # How to use it
 
-The project uses a combination of a wrapping provider and a transaction interceptor. A simple [InMemoryCache](https://github.com/moozzyk/EFCache/blob/master/EFCache/InMemoryCache.cs) is included in the project. To use it you need first configure EF using code based configuration. Here is an example of how such a configuration looks like.
+The project uses a combination of a wrapping provider and a transaction interceptor. A simple [InMemoryCache](https://github.com/moozzyk/EFCache/blob/master/src/EFCache/InMemoryCache.cs) is included in the project. To use it you need first configure EF using code based configuration. Here is an example of how such a configuration looks like.
 
 ```C#
 public class Configuration : DbConfiguration
@@ -36,7 +36,7 @@ public class Configuration : DbConfiguration
 }
 ```
 
-Starting with version 1.1.1 you can also use the new static `EntityFrameworkCache.Initialize()` method to configure EF to use EFCache. The `Initialize` method should be invoked at app startup (before EF is used) - e.g. in the application static constructor. To initialize EFCache with the built-in [InMemoryCache](https://github.com/moozzyk/EFCache/blob/master/EFCache/InMemoryCache.cs) you can use the following code:
+Starting with version 1.1.1 you can also use the new static `EntityFrameworkCache.Initialize()` method to configure EF to use EFCache. The `Initialize` method should be invoked at app startup (before EF is used) - e.g. in the application static constructor. To initialize EFCache with the built-in [InMemoryCache](https://github.com/moozzyk/EFCache/blob/master/src/EFCache/InMemoryCache.cs) you can use the following code:
 
 ```C#
 EntityFrameworkCache.Initialize(new InMemoryCache());
