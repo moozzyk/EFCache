@@ -14,13 +14,25 @@ namespace EFCache
     {
         private readonly DbProviderServices _providerServices;
         private readonly CacheTransactionHandler _cacheTransactionHandler;
+        private readonly CachingCommandStrategyFactory _cachingCommandStrategyFactory;
         private readonly CachingPolicy _cachingPolicy;
 
-        public CachingProviderServices(DbProviderServices providerServices, CacheTransactionHandler cacheTransactionHandler, CachingPolicy cachingPolicy = null)
+        public CachingProviderServices(DbProviderServices providerServices, 
+            CacheTransactionHandler cacheTransactionHandler, 
+            CachingPolicy cachingPolicy = null)
         {
             _providerServices = providerServices;
             _cacheTransactionHandler = cacheTransactionHandler;
             _cachingPolicy = cachingPolicy ?? new CachingPolicy();
+            _cachingCommandStrategyFactory = DefaultCachingCommandFactory.Create;
+        }
+
+        public CachingProviderServices(DbProviderServices providerServices,
+            CacheTransactionHandler cacheTransactionHandler,
+            CachingCommandStrategyFactory cachingCommandStrategyFactory,
+            CachingPolicy cachingPolicy = null) : this(providerServices, cacheTransactionHandler, cachingPolicy)
+        {
+            _cachingCommandStrategyFactory = cachingCommandStrategyFactory;
         }
 
         protected override DbCommandDefinition CreateDbCommandDefinition(DbProviderManifest providerManifest, DbCommandTree commandTree)
@@ -29,7 +41,8 @@ namespace EFCache
                 _providerServices.CreateCommandDefinition(providerManifest, commandTree), 
                 new CommandTreeFacts(commandTree),
                 _cacheTransactionHandler,
-                _cachingPolicy);
+                _cachingPolicy,
+                _cachingCommandStrategyFactory);
         }
 
         protected override DbProviderManifest GetDbProviderManifest(string manifestToken)
@@ -106,7 +119,7 @@ namespace EFCache
 
             return cachingCommand != null
                 ? new CachingCommandDefinition(commandDefinition, cachingCommand.CommandTreeFacts,
-                    cachingCommand.CacheTransactionHandler, cachingCommand.CachingPolicy)
+                    cachingCommand.CacheTransactionHandler, cachingCommand.CachingPolicy, _cachingCommandStrategyFactory)
                 : commandDefinition; 
         }
     }

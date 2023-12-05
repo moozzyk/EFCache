@@ -13,6 +13,7 @@ namespace EFCache
         private readonly CommandTreeFacts _commandTreeFacts;
         private readonly CacheTransactionHandler _cacheTransactionHandler;
         private readonly CachingPolicy _cachingPolicy;
+        private readonly CachingCommandStrategyFactory _cachingCommandStrategyFactory;
 
         public bool IsQuery
         {
@@ -29,17 +30,30 @@ namespace EFCache
             get { return _commandTreeFacts.AffectedEntitySets; }
         }
 
-        public CachingCommandDefinition(DbCommandDefinition commandDefinition, CommandTreeFacts commandTreeFacts, CacheTransactionHandler cacheTransactionHandler, CachingPolicy cachingPolicy)
+        public CachingCommandDefinition(DbCommandDefinition commandDefinition,
+            CommandTreeFacts commandTreeFacts,
+            CacheTransactionHandler cacheTransactionHandler,
+            CachingPolicy cachingPolicy)
         {
             _commandDefintion = commandDefinition;
             _commandTreeFacts = commandTreeFacts;
             _cacheTransactionHandler = cacheTransactionHandler;
             _cachingPolicy = cachingPolicy;
+            _cachingCommandStrategyFactory = DefaultCachingCommandFactory.Create;
+        }
+
+        public CachingCommandDefinition(DbCommandDefinition commandDefinition, 
+            CommandTreeFacts commandTreeFacts, 
+            CacheTransactionHandler cacheTransactionHandler, 
+            CachingPolicy cachingPolicy,
+            CachingCommandStrategyFactory cachingCommandStrategyFactory) : this(commandDefinition, commandTreeFacts, cacheTransactionHandler, cachingPolicy)
+        {
+            _cachingCommandStrategyFactory = cachingCommandStrategyFactory;
         }
 
         public override DbCommand CreateCommand()
         {
-            return new CachingCommand(_commandDefintion.CreateCommand(), _commandTreeFacts, _cacheTransactionHandler, _cachingPolicy);
+            return new CachingCommand(_commandDefintion.CreateCommand(), _commandTreeFacts, _cacheTransactionHandler, _cachingPolicy, _cachingCommandStrategyFactory);
         }
     }
 }
