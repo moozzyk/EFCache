@@ -6,19 +6,19 @@ namespace EFCache
     using System.Linq;
     using System.Collections.Generic;
 
-    public class InMemoryCache : ICache
+    public class InMemoryCache : ICacheProvider, ICacheItemInvalidation
     {
         private readonly Dictionary<string, CacheEntry> _cache = new Dictionary<string, CacheEntry>();
         private readonly Dictionary<string, HashSet<string>> _entitySetToKey = new Dictionary<string, HashSet<string>>();
 
-        public bool GetItem(string key, out object value)
+        public bool GetItem<TObject>(string key, out TObject value)
         {
             if (key == null)
             {
                 throw new ArgumentNullException(nameof(key));
             }
 
-            value = null;
+            value = default;
 
             lock (_cache)
             {
@@ -34,7 +34,7 @@ namespace EFCache
                     else
                     {
                         entry.LastAccess = now;
-                        value = entry.Value;
+                        value = (TObject)entry.Value;
                         return true;
                     }
                 }                
@@ -43,7 +43,7 @@ namespace EFCache
             return false;
         }
 
-        public void PutItem(string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration, DateTimeOffset absoluteExpiration)
+        public void PutItem<TObject>(string key, TObject value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration, DateTimeOffset absoluteExpiration)
         {
             if (key == null)
             {
@@ -74,6 +74,17 @@ namespace EFCache
                     keys.Add(key);                    
                 }
             }
+        }
+
+        public bool GetItem(string key, out object value)
+        {
+            return GetItem<object>(key, out value);
+        }
+
+        public void PutItem(string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration,
+            DateTimeOffset absoluteExpiration)
+        {
+            PutItem<object>(key, value, dependentEntitySets, slidingExpiration, absoluteExpiration);
         }
 
         public void InvalidateSets(IEnumerable<string> entitySets)

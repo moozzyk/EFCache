@@ -15,17 +15,23 @@ namespace EFCache
         private readonly ConcurrentDictionary<DbTransaction, List<string>> _affectedSetsInTransaction
             = new ConcurrentDictionary<DbTransaction, List<string>>();
         private readonly ICache _cache;
+        private readonly ICacheProvider _cacheProvider;
 
         public CacheTransactionHandler(ICache cache)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
 
+        public CacheTransactionHandler(ICacheProvider cacheProvider)
+        {
+            _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
+        }
+
         protected CacheTransactionHandler()
         {
         }
 
-        public virtual bool GetItem(DbTransaction transaction, string key, DbConnection connection, out object value)
+        protected virtual bool GetItem(DbTransaction transaction, string key, DbConnection connection, out object value)
         {
             if (transaction == null)
             {
@@ -37,12 +43,47 @@ namespace EFCache
             return false;
         }
 
-        public virtual void PutItem(DbTransaction transaction, string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration,
+        public virtual bool GetItem<TObject>(DbTransaction transaction, string key, DbConnection connection, out TObject value)
+        {
+            if (transaction != null)
+            {
+                value = default;
+                return false;
+            }
+
+            try
+            {
+                return ResolveCacheProvider(connection).GetItem(key, out value);
+            }
+            catch (CacheProviderNotFoundException)
+            {
+                object objectValue;
+                var result = GetItem(transaction, key, connection, out objectValue);
+                value = (TObject)objectValue;
+                return result;
+            }
+        }
+
+        protected virtual void PutItem(DbTransaction transaction, string key, object value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration,
             DateTimeOffset absoluteExpiration, DbConnection connection)
         {
             if (transaction == null)
             {
                 ResolveCache(connection).PutItem(key, value, dependentEntitySets, slidingExpiration, absoluteExpiration);
+            }
+        }
+
+        public virtual void PutItem<TObject>(DbTransaction transaction, string key, TObject value, IEnumerable<string> dependentEntitySets, TimeSpan slidingExpiration,
+            DateTimeOffset absoluteExpiration, DbConnection connection)
+        {
+            if (transaction != null) return;
+            try
+            {
+                ResolveCacheProvider(connection).PutItem(key, value, dependentEntitySets, slidingExpiration, absoluteExpiration);
+            }
+            catch (CacheProviderNotFoundException)
+            {
+                PutItem(transaction, key, (object)value, dependentEntitySets, slidingExpiration, absoluteExpiration, connection);
             }
         }
 
@@ -130,6 +171,23 @@ namespace EFCache
         }
 
         protected virtual ICache ResolveCache(DbConnection connection)
-            => _cache ?? throw new InvalidOperationException("Cannot resolve cache because it has not been initialized.");
+        {
+            if (_cache != null) return _cache;
+            var cacheProvider = ResolveCacheProvider(connection);
+            if (cacheProvider != null) return cacheProvider;
+            throw new InvalidOperationException("Cannot resolve cache because it has not been initialized.");
+        }
+
+        protected virtual ICacheProvider ResolveCacheProvider(DbConnection connection)
+        {
+            return _cacheProvider ??
+                   throw new CacheProviderNotFoundException("Cannot resolve cache because it has not been initialized.");
+        }
     }
+
+    public class CacheProviderNotFoundException : InvalidOperationException
+    {
+        public CacheProviderNotFoundException(string message) : base(message) { }
+    }
+
 }

@@ -19,5 +19,16 @@ namespace EFCache
                     (dbServices, _) => new CachingProviderServices(dbServices, transactionHandler, cachingPolicy));
             DbInterception.Add(transactionHandler);
         }
+
+        public static void Initialize(ICacheProvider cache) => Initialize(cache, new CachingPolicy());
+        public static void Initialize(ICacheProvider cache, CachingPolicy cachingPolicy)
+        {
+            var transactionHandler = new CacheTransactionHandler(cache);
+
+            DbConfiguration.Loaded +=
+                (sender, args) => args.ReplaceService<DbProviderServices>(
+                    (dbServices, _) => new CachingProviderServices(dbServices, transactionHandler, cachingPolicy));
+            DbInterception.Add(transactionHandler);
+        }
     }
 }
